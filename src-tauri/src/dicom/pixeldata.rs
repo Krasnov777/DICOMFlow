@@ -131,7 +131,33 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_image_dimensions() {
-        // TODO: Test with sample DICOM file
+    fn test_window_presets_ct() {
+        let presets = get_window_presets("CT");
+        assert_eq!(presets.len(), 4);
+        assert_eq!(presets[0].name, "Lung");
+        assert_eq!(presets[1].name, "Bone");
+        assert_eq!(presets[2].name, "Soft Tissue");
+        assert_eq!(presets[3].name, "Brain");
+    }
+
+    #[test]
+    fn test_window_presets_default() {
+        let presets = get_window_presets("MR");
+        assert_eq!(presets.len(), 1);
+        assert_eq!(presets[0].name, "Default");
+        assert_eq!(presets[0].center, 128.0);
+        assert_eq!(presets[0].width, 256.0);
+    }
+
+    #[test]
+    fn test_window_preset_values() {
+        let presets = get_window_presets("CT");
+        let lung = &presets[0];
+        assert_eq!(lung.center, -600.0);
+        assert_eq!(lung.width, 1500.0);
+
+        let bone = &presets[1];
+        assert_eq!(bone.center, 400.0);
+        assert_eq!(bone.width, 1800.0);
     }
 }
