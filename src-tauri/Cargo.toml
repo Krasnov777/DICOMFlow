@@ -47,6 +47,9 @@ dirs = "5.0"
 # Image processing
 image = "0.24"
 
+# Base64 encoding
+base64 = "0.21"
+
 [dev-dependencies]
 tokio-test = "0.4"
 mockall = "0.12"
