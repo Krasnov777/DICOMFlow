@@ -2,11 +2,80 @@
   import { activeStudyStore } from '../stores/activeStudyStore';
   import { invoke } from '@tauri-apps/api/core';
 
-  let windowCenter = 128;
-  let windowWidth = 256;
+  let windowCenter = $activeStudyStore.windowCenter || 128;
+  let windowWidth = $activeStudyStore.windowWidth || 256;
+  let isLoading = false;
+
+  // Load image when file path changes
+  $: if ($activeStudyStore.currentFilePath) {
+    loadImage();
+  }
+
+  async function loadImage() {
+    if (!$activeStudyStore.currentFilePath) return;
+
+    isLoading = true;
+    try {
+      // Get metadata to retrieve default windowing
+      const metadata = await invoke('get_metadata', {
+        filePath: $activeStudyStore.currentFilePath
+      });
+
+      // Update windowing from metadata if available
+      if (metadata.window_center && metadata.window_width) {
+        windowCenter = metadata.window_center;
+        windowWidth = metadata.window_width;
+        activeStudyStore.update(store => ({
+          ...store,
+          windowCenter: metadata.window_center,
+          windowWidth: metadata.window_width
+        }));
+      }
+
+      // Load image with default or current windowing
+      const base64Png = await invoke('get_image_data', {
+        filePath: $activeStudyStore.currentFilePath,
+        windowCenter: windowCenter,
+        windowWidth: windowWidth
+      });
+
+      // Update store with image data
+      activeStudyStore.update(store => ({
+        ...store,
+        currentImageData: `data:image/png;base64,${base64Png}`
+      }));
+    } catch (error) {
+      console.error('Failed to load image:', error);
+      alert(`Failed to load image: ${error}`);
+    } finally {
+      isLoading = false;
+    }
+  }
 
   async function applyWindowing() {
-    // TODO: Call Tauri command to apply windowing
+    if (!$activeStudyStore.currentFilePath) return;
+
+    isLoading = true;
+    try {
+      // Apply new windowing
+      const base64Png = await invoke('apply_windowing', {
+        filePath: $activeStudyStore.currentFilePath,
+        center: windowCenter,
+        width: windowWidth
+      });
+
+      // Update store
+      activeStudyStore.update(store => ({
+        ...store,
+        currentImageData: `data:image/png;base64,${base64Png}`,
+        windowCenter: windowCenter,
+        windowWidth: windowWidth
+      }));
+    } catch (error) {
+      console.error('Failed to apply windowing:', error);
+    } finally {
+      isLoading = false;
+    }
   }
 </script>
 
@@ -27,10 +96,15 @@
 
   <!-- Image Viewport -->
   <div class="flex-1 flex flex-col">
-    <div class="flex-1 bg-black flex items-center justify-center">
+    <div class="flex-1 bg-black flex items-center justify-center relative">
+      {#if isLoading}
+        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
+          <div class="text-white">Loading image...</div>
+        </div>
+      {/if}
       {#if $activeStudyStore.currentImageData}
         <img src={$activeStudyStore.currentImageData} alt="DICOM" class="max-w-full max-h-full" />
-      {:else}
+      {:else if !isLoading}
         <p class="text-gray-500">No image loaded</p>
       {/if}
     </div>
