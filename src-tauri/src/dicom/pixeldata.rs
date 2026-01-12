@@ -2,29 +2,59 @@
 
 use anyhow::Result;
 use dicom_object::InMemDicomObject;
-use dicom_pixeldata::{DecodedPixelData, PixelDecoder};
 use image::{DynamicImage, ImageBuffer, Luma};
 
 /// Extract and decode pixel data from a DICOM object
-pub fn extract_pixel_data(_obj: &InMemDicomObject) -> Result<DecodedPixelData> {
-    // TODO: Implement pixel data extraction using dicom-pixeldata crate
-    // The API requires using PixelDecoder trait
-    Err(anyhow::anyhow!("Pixel data extraction not yet implemented"))
+/// For now, return raw pixel values as a simplified implementation
+pub fn extract_pixel_data(obj: &InMemDicomObject) -> Result<Vec<u16>> {
+    use dicom_dictionary_std::tags;
+
+    // Try to get pixel data element
+    let pixel_data_elem = obj.element(tags::PIXEL_DATA)?;
+
+    // For now, return placeholder data
+    // TODO: Properly decode using dicom-pixeldata crate
+    // This requires understanding the transfer syntax and proper decoding
+
+    Err(anyhow::anyhow!("Pixel data decoding not yet fully implemented. Needs proper transfer syntax handling."))
 }
 
-/// Convert decoded pixel data to PNG bytes for frontend display
-pub fn to_png_bytes(pixel_data: &DecodedPixelData, window_center: f32, window_width: f32) -> Result<Vec<u8>> {
-    // TODO: Implement windowing logic
-    // - Apply window center/width
-    // - Handle different pixel formats (grayscale, RGB)
-    // - Apply modality LUT
-    // - Convert to 8-bit for PNG
+/// Get image dimensions from DICOM object
+pub fn get_image_dimensions(obj: &InMemDicomObject) -> Result<(u32, u32)> {
+    use dicom_dictionary_std::tags;
 
-    // Placeholder implementation
+    let rows = obj.element(tags::ROWS)?
+        .to_int::<u32>()?;
+    let cols = obj.element(tags::COLUMNS)?
+        .to_int::<u32>()?;
+
+    Ok((cols, rows))
+}
+
+/// Convert pixel data to PNG bytes for frontend display
+pub fn to_png_bytes(
+    pixel_data: &[u16],
+    rows: u32,
+    cols: u32,
+    window_center: f32,
+    window_width: f32
+) -> Result<Vec<u8>> {
+    // Create 8-bit image buffer with windowing applied
+    let img_buffer: ImageBuffer<Luma<u8>, Vec<u8>> = ImageBuffer::from_fn(cols, rows, |x, y| {
+        let idx = (y * cols + x) as usize;
+        let pixel_value = if idx < pixel_data.len() {
+            let val = pixel_data[idx] as f32;
+            apply_windowing(val, window_center, window_width)
+        } else {
+            0
+        };
+        Luma([pixel_value])
+    });
+
+    // Convert to PNG bytes
     let mut png_bytes = Vec::new();
-
-    // Convert to PNG using image crate
-    // ...
+    let dynamic_img = DynamicImage::ImageLuma8(img_buffer);
+    dynamic_img.write_to(&mut std::io::Cursor::new(&mut png_bytes), image::ImageFormat::Png)?;
 
     Ok(png_bytes)
 }

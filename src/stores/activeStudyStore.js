@@ -10,6 +10,8 @@ export const activeStudyStore = writable({
   currentSeriesUID: null,
   currentInstanceUID: null,
   currentImageData: null,
+  currentFilePath: null,
+  tags: [],
   windowCenter: 128,
   windowWidth: 256,
 });

@@ -4,8 +4,9 @@ use crate::dicom::tags::DicomTag;
 
 #[tauri::command]
 pub async fn get_all_tags(file_path: String) -> Result<Vec<DicomTag>, String> {
-    // TODO: Load DICOM and return all tags
-    Ok(vec![])
+    let obj = crate::dicom::load_dicom_file(&file_path).map_err(|e| e.to_string())?;
+    let tags = crate::dicom::tags::extract_all_tags(&obj);
+    Ok(tags)
 }
 
 #[tauri::command]

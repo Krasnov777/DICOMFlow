@@ -19,6 +19,9 @@
         // Call backend to load the file
         const fileInfo = await invoke('open_dicom_file', { path: selected });
 
+        // Load tags for this file
+        const tags = await invoke('get_all_tags', { filePath: selected });
+
         // Update the active study store
         activeStudyStore.update(store => ({
           ...store,
@@ -29,6 +32,8 @@
           modality: fileInfo.modality,
           currentInstanceUID: fileInfo.sop_instance_uid,
           currentSeriesUID: fileInfo.series_instance_uid,
+          currentFilePath: selected,
+          tags: tags,
         }));
 
         console.log('Loaded DICOM file:', fileInfo);

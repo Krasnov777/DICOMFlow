@@ -69,6 +69,18 @@
   <!-- Tag Panel -->
   <div class="w-80 bg-gray-700 p-4 overflow-y-auto">
     <h2 class="text-lg font-semibold mb-4">DICOM Tags</h2>
-    <p class="text-gray-400 text-sm">Tags will be displayed here</p>
+    {#if $activeStudyStore.tags && $activeStudyStore.tags.length > 0}
+      <div class="space-y-1 text-xs font-mono">
+        {#each $activeStudyStore.tags as tag}
+          <div class="flex justify-between gap-2 py-1 border-b border-gray-600 hover:bg-gray-600">
+            <span class="text-blue-300">{tag.tag}</span>
+            <span class="text-gray-400 truncate flex-1">{tag.name}</span>
+            <span class="text-green-300 text-right">{tag.value}</span>
+          </div>
+        {/each}
+      </div>
+    {:else}
+      <p class="text-gray-400 text-sm">No tags loaded</p>
+    {/if}
   </div>
 </div>
