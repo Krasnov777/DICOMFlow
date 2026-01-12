@@ -16,9 +16,15 @@ pub fn parse_and_validate<P: AsRef<Path>>(path: P) -> Result<InMemDicomObject> {
     Ok(file_obj.into_inner())
 }
 
+/// DICOM file with its path
+pub struct ParsedDicomFile {
+    pub path: String,
+    pub object: InMemDicomObject,
+}
+
 /// Parse multiple DICOM files from a directory
-pub fn parse_directory<P: AsRef<Path>>(dir: P) -> Result<Vec<InMemDicomObject>> {
-    let mut objects = Vec::new();
+pub fn parse_directory<P: AsRef<Path>>(dir: P) -> Result<Vec<ParsedDicomFile>> {
+    let mut files = Vec::new();
 
     for entry in std::fs::read_dir(dir)? {
         let entry = entry?;
@@ -26,7 +32,12 @@ pub fn parse_directory<P: AsRef<Path>>(dir: P) -> Result<Vec<InMemDicomObject>> 
 
         if path.is_file() {
             match dicom_object::open_file(&path) {
-                Ok(file_obj) => objects.push(file_obj.into_inner()),
+                Ok(file_obj) => {
+                    files.push(ParsedDicomFile {
+                        path: path.to_string_lossy().to_string(),
+                        object: file_obj.into_inner(),
+                    });
+                }
                 Err(e) => {
                     tracing::warn!("Failed to parse {:?}: {}", path, e);
                     continue;
@@ -35,7 +46,7 @@ pub fn parse_directory<P: AsRef<Path>>(dir: P) -> Result<Vec<InMemDicomObject>> 
         }
     }
 
-    Ok(objects)
+    Ok(files)
 }
 
 #[cfg(test)]

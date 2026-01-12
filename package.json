@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^2.9.1",
+    "@tauri-apps/plugin-dialog": "^2.0.0",
     "chart.js": "^4.4.0",
     "svelte-spa-router": "^4.0.0"
   },

@@ -1,12 +1,79 @@
 <script>
   import { connectionStore } from '../../stores/connectionStore';
+  import { activeStudyStore } from '../../stores/activeStudyStore';
+  import { invoke } from '@tauri-apps/api/core';
+  import { open } from '@tauri-apps/plugin-dialog';
 
-  function handleOpenFile() {
-    // TODO: Trigger file open dialog
+  async function handleOpenFile() {
+    try {
+      // Open file dialog
+      const selected = await open({
+        multiple: false,
+        filters: [{
+          name: 'DICOM Files',
+          extensions: ['dcm', 'dicom', '*']
+        }]
+      });
+
+      if (selected) {
+        // Call backend to load the file
+        const fileInfo = await invoke('open_dicom_file', { path: selected });
+
+        // Update the active study store
+        activeStudyStore.update(store => ({
+          ...store,
+          studyInstanceUID: fileInfo.study_instance_uid,
+          patientName: fileInfo.patient_name,
+          patientID: fileInfo.patient_id,
+          studyDate: fileInfo.study_date,
+          modality: fileInfo.modality,
+          currentInstanceUID: fileInfo.sop_instance_uid,
+          currentSeriesUID: fileInfo.series_instance_uid,
+        }));
+
+        console.log('Loaded DICOM file:', fileInfo);
+      }
+    } catch (error) {
+      console.error('Failed to open file:', error);
+      alert('Failed to open file: ' + error);
+    }
   }
 
-  function handleOpenDirectory() {
-    // TODO: Trigger directory open dialog
+  async function handleOpenDirectory() {
+    try {
+      // Open directory dialog
+      const selected = await open({
+        directory: true,
+        multiple: false
+      });
+
+      if (selected) {
+        // Call backend to scan directory
+        const files = await invoke('open_dicom_directory', { path: selected });
+
+        if (files.length > 0) {
+          // Load the first file's metadata into the store
+          const firstFile = files[0];
+          activeStudyStore.update(store => ({
+            ...store,
+            studyInstanceUID: firstFile.study_instance_uid,
+            patientName: firstFile.patient_name,
+            patientID: firstFile.patient_id,
+            studyDate: firstFile.study_date,
+            modality: firstFile.modality,
+            currentInstanceUID: firstFile.sop_instance_uid,
+            currentSeriesUID: firstFile.series_instance_uid,
+          }));
+
+          console.log(`Loaded ${files.length} DICOM files from directory`);
+        } else {
+          alert('No DICOM files found in the selected directory');
+        }
+      }
+    } catch (error) {
+      console.error('Failed to open directory:', error);
+      alert('Failed to open directory: ' + error);
+    }
   }
 </script>
 

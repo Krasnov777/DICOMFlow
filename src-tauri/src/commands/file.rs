@@ -22,8 +22,32 @@ pub async fn open_dicom_file(path: String) -> Result<DicomFileInfo, String> {
 
 #[tauri::command]
 pub async fn open_dicom_directory(path: String) -> Result<Vec<DicomFileInfo>, String> {
-    // TODO: Scan directory for DICOM files and return list
-    Ok(vec![])
+    let parsed_files = dicom::parser::parse_directory(&path).map_err(|e| e.to_string())?;
+
+    let mut file_infos = Vec::new();
+
+    for parsed_file in parsed_files {
+        match dicom::extract_metadata(&parsed_file.object) {
+            Ok(metadata) => {
+                file_infos.push(DicomFileInfo {
+                    path: parsed_file.path,
+                    study_instance_uid: metadata.study_instance_uid,
+                    series_instance_uid: metadata.series_instance_uid,
+                    sop_instance_uid: metadata.sop_instance_uid,
+                    patient_name: metadata.patient_name,
+                    patient_id: metadata.patient_id,
+                    study_date: metadata.study_date,
+                    modality: metadata.modality,
+                });
+            }
+            Err(e) => {
+                tracing::warn!("Failed to extract metadata: {}", e);
+                continue;
+            }
+        }
+    }
+
+    Ok(file_infos)
 }
 
 #[derive(Debug, serde::Serialize)]
