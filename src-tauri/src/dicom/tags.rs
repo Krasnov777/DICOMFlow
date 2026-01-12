@@ -28,7 +28,24 @@ pub fn tags_to_xml(obj: &InMemDicomObject) -> Result<String> {
 
 /// Update a tag value in a DICOM object
 pub fn update_tag(obj: &mut InMemDicomObject, tag: Tag, value: String) -> Result<()> {
-    // TODO: Implement tag update with proper VR handling
+    use dicom_object::mem::InMemElement;
+    use dicom_core::value::{PrimitiveValue, Value};
+
+    // Get existing element to determine VR
+    let existing_vr = obj.element(tag)
+        .map(|e| e.vr())
+        .unwrap_or(VR::LO); // Default to Long String if tag doesn't exist
+
+    // Create new element with updated value
+    let new_element = InMemElement::new(
+        tag,
+        existing_vr,
+        Value::Primitive(PrimitiveValue::Str(value)),
+    );
+
+    // Insert or replace the element
+    obj.put_element(new_element);
+
     Ok(())
 }
 

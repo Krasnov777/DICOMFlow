@@ -41,6 +41,7 @@ async fn main() {
             commands::tags::update_tag,
             commands::tags::delete_tag,
             commands::tags::anonymize_study,
+            commands::tags::get_anonymization_templates,
 
             // DIMSE operations
             commands::dimse::start_scp,

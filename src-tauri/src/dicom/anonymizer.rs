@@ -43,8 +43,97 @@ pub fn anonymize(obj: &mut InMemDicomObject, template: &AnonymizationTemplate) -
 
 /// Apply a single anonymization rule
 fn apply_rule(obj: &mut InMemDicomObject, rule: &AnonymizationRule) -> Result<()> {
-    // TODO: Parse tag from string and apply action
+    use dicom_object::mem::InMemElement;
+    use dicom_core::value::{PrimitiveValue, Value};
+    use dicom_core::VR;
+    use sha2::{Sha256, Digest};
+    use dicom_core::Tag;
+
+    // Parse tag string
+    let tag = parse_tag_string(&rule.tag)?;
+
+    match &rule.action {
+        AnonymizationAction::Remove => {
+            obj.remove_element(tag);
+        }
+        AnonymizationAction::Blank => {
+            if let Ok(existing) = obj.element(tag) {
+                let vr = existing.vr();
+                let new_elem = InMemElement::new(
+                    tag,
+                    vr,
+                    Value::Primitive(PrimitiveValue::Str(String::new())),
+                );
+                obj.put_element(new_elem);
+            }
+        }
+        AnonymizationAction::Replace(new_value) => {
+            let vr = obj.element(tag).map(|e| e.vr()).unwrap_or(VR::LO);
+            let new_elem = InMemElement::new(
+                tag,
+                vr,
+                Value::Primitive(PrimitiveValue::Str(new_value.clone())),
+            );
+            obj.put_element(new_elem);
+        }
+        AnonymizationAction::Hash => {
+            if let Ok(existing) = obj.element(tag) {
+                if let Ok(value_str) = existing.to_str() {
+                    let mut hasher = Sha256::new();
+                    hasher.update(value_str.as_bytes());
+                    let hash = format!("{:x}", hasher.finalize());
+                    let hash_short = &hash[0..16]; // Take first 16 chars
+
+                    let vr = existing.vr();
+                    let new_elem = InMemElement::new(
+                        tag,
+                        vr,
+                        Value::Primitive(PrimitiveValue::Str(hash_short.to_string())),
+                    );
+                    obj.put_element(new_elem);
+                }
+            }
+        }
+        AnonymizationAction::GenerateUID => {
+            let new_uid = format!("2.25.{}", Uuid::new_v4().as_u128());
+            let new_elem = InMemElement::new(
+                tag,
+                VR::UI,
+                Value::Primitive(PrimitiveValue::Str(new_uid)),
+            );
+            obj.put_element(new_elem);
+        }
+        AnonymizationAction::Increment => {
+            // For increment, we'll just add 1 to numeric values
+            if let Ok(existing) = obj.element(tag) {
+                if let Ok(num) = existing.to_int::<i32>() {
+                    let new_value = (num + 1).to_string();
+                    let vr = existing.vr();
+                    let new_elem = InMemElement::new(
+                        tag,
+                        vr,
+                        Value::Primitive(PrimitiveValue::Str(new_value)),
+                    );
+                    obj.put_element(new_elem);
+                }
+            }
+        }
+    }
+
     Ok(())
+}
+
+fn parse_tag_string(tag_str: &str) -> Result<Tag> {
+    let cleaned = tag_str.replace("(", "").replace(")", "").replace(",", "");
+
+    if cleaned.len() != 8 {
+        return Err(anyhow::anyhow!("Invalid tag format: {}", tag_str));
+    }
+
+    let group = u16::from_str_radix(&cleaned[0..4], 16)?;
+    let element = u16::from_str_radix(&cleaned[4..8], 16)?;
+
+    Ok(Tag(group, element))
 }
 
 /// Get built-in anonymization templates
