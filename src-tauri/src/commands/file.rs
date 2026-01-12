@@ -22,30 +22,24 @@ pub async fn open_dicom_file(path: String) -> Result<DicomFileInfo, String> {
 
 #[tauri::command]
 pub async fn open_dicom_directory(path: String) -> Result<Vec<DicomFileInfo>, String> {
-    let parsed_files = dicom::parser::parse_directory(&path).map_err(|e| e.to_string())?;
+    // Use fast scanning that only reads required tags
+    let minimal_infos = dicom::parser::scan_directory_fast(&path).map_err(|e| e.to_string())?;
 
-    let mut file_infos = Vec::new();
+    let file_infos: Vec<DicomFileInfo> = minimal_infos
+        .into_iter()
+        .map(|info| DicomFileInfo {
+            path: info.path,
+            study_instance_uid: info.study_instance_uid,
+            series_instance_uid: info.series_instance_uid,
+            sop_instance_uid: info.sop_instance_uid,
+            patient_name: info.patient_name,
+            patient_id: info.patient_id,
+            study_date: info.study_date,
+            modality: info.modality,
+        })
+        .collect();
 
-    for parsed_file in parsed_files {
-        match dicom::extract_metadata(&parsed_file.object) {
-            Ok(metadata) => {
-                file_infos.push(DicomFileInfo {
-                    path: parsed_file.path,
-                    study_instance_uid: metadata.study_instance_uid,
-                    series_instance_uid: metadata.series_instance_uid,
-                    sop_instance_uid: metadata.sop_instance_uid,
-                    patient_name: metadata.patient_name,
-                    patient_id: metadata.patient_id,
-                    study_date: metadata.study_date,
-                    modality: metadata.modality,
-                });
-            }
-            Err(e) => {
-                tracing::warn!("Failed to extract metadata: {}", e);
-                continue;
-            }
-        }
-    }
+    tracing::info!("Loaded {} DICOM files from directory", file_infos.len());
 
     Ok(file_infos)
 }

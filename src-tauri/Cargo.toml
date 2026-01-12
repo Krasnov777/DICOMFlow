@@ -53,6 +53,10 @@ base64 = "0.21"
 # Hashing for anonymization
 sha2 = "0.10"
 
+# Directory scanning and parallelization
+walkdir = "2.4"
+rayon = "1.8"
+
 [dev-dependencies]
 tokio-test = "0.4"
 mockall = "0.12"
