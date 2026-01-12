@@ -5,7 +5,9 @@
   import { open } from '@tauri-apps/plugin-dialog';
 
   async function handleOpenFile() {
+    console.log('Open File button clicked');
     try {
+      console.log('Opening file dialog...');
       // Open file dialog
       const selected = await open({
         multiple: false,
@@ -14,6 +16,7 @@
           extensions: ['dcm', 'dicom', '*']
         }]
       });
+      console.log('Selected file:', selected);
 
       if (selected) {
         // Call backend to load the file

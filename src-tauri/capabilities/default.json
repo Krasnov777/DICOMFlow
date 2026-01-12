@@ -1,0 +1,30 @@
+{
+  "$schema": "https://schema.tauri.app/config/2.0.0",
+  "identifier": "default",
+  "description": "Default permissions for DICOMFlow",
+  "platforms": ["linux", "macOS", "windows"],
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:default",
+    "core:window:allow-set-title",
+    "core:window:allow-center",
+    "core:app:default",
+    "core:event:default",
+    "core:menu:default",
+    "core:tray:default",
+    "dialog:default",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "fs:default",
+    "fs:allow-read-file",
+    "fs:allow-read-dir",
+    "fs:allow-write-file",
+    "fs:allow-exists",
+    "fs:allow-create",
+    "fs:allow-remove",
+    "fs:scope-home",
+    "shell:default",
+    "shell:allow-execute"
+  ]
+}

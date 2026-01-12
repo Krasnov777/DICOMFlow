@@ -11,7 +11,12 @@
   ];
 
   function isActive(path) {
+    console.log('Checking active:', path, 'current:', $location);
     return $location === path;
+  }
+
+  $: {
+    console.log('Current location:', $location);
   }
 </script>
 
