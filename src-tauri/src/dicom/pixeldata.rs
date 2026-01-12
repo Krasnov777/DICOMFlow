@@ -12,11 +12,20 @@ pub fn load_and_decode_to_png_base64<P: AsRef<Path>>(
     window_center: Option<f32>,
     window_width: Option<f32>,
 ) -> Result<String> {
+    use std::time::Instant;
+
+    let total_start = Instant::now();
+    tracing::info!("Starting image decode for {:?}", path.as_ref());
+
     // Load as FileDicomObject (required for PixelDecoder)
+    let load_start = Instant::now();
     let file_obj = dicom_object::open_file(path)?;
+    tracing::info!("File loaded in {:?}", load_start.elapsed());
 
     // Decode pixel data using PixelDecoder trait
+    let decode_start = Instant::now();
     let decoded = file_obj.decode_pixel_data()?;
+    tracing::info!("Pixel data decoded in {:?}", decode_start.elapsed());
 
     // Build conversion options with optional windowing
     let mut options = ConvertOptions::new();
@@ -36,18 +45,26 @@ pub fn load_and_decode_to_png_base64<P: AsRef<Path>>(
     options = options.force_8bit();
 
     // Convert to dynamic image (frame 0)
+    let convert_start = Instant::now();
     let dynamic_image = decoded.to_dynamic_image_with_options(0, &options)?;
+    tracing::info!("Converted to image in {:?}", convert_start.elapsed());
 
     // Encode as PNG using image crate
+    let png_start = Instant::now();
     use std::io::Cursor;
     let mut png_bytes: Vec<u8> = Vec::new();
     {
         let mut cursor = Cursor::new(&mut png_bytes);
         dynamic_image.write_to(&mut cursor, image::ImageFormat::Png)?;
     }
+    tracing::info!("PNG encoded in {:?}, size: {} bytes", png_start.elapsed(), png_bytes.len());
 
     // Encode as base64
+    let b64_start = Instant::now();
     let base64_string = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, &png_bytes);
+    tracing::info!("Base64 encoded in {:?}, length: {}", b64_start.elapsed(), base64_string.len());
+
+    tracing::info!("Total image decode time: {:?}", total_start.elapsed());
 
     Ok(base64_string)
 }

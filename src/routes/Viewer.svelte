@@ -8,9 +8,10 @@
   let windowWidth = $activeStudyStore.windowWidth || 256;
   let isLoading = false;
   let loadError = null;
+  let currentLoadingPath = null; // Track what's currently loading to prevent duplicates
 
   // Load image when file path changes
-  $: if ($activeStudyStore.currentFilePath) {
+  $: if ($activeStudyStore.currentFilePath && $activeStudyStore.currentFilePath !== currentLoadingPath && !isLoading) {
     console.log('File path changed, loading image:', $activeStudyStore.currentFilePath);
     loadImage();
   }
@@ -21,18 +22,30 @@
       return;
     }
 
-    console.log('Starting image load for:', $activeStudyStore.currentFilePath);
+    // Prevent multiple simultaneous loads
+    if (isLoading) {
+      console.log('Already loading, skipping duplicate request');
+      return;
+    }
+
+    const pathToLoad = $activeStudyStore.currentFilePath;
+    currentLoadingPath = pathToLoad;
+
+    console.log('Starting image load for:', pathToLoad);
     isLoading = true;
     loadError = null;
+
+    const startTime = performance.now();
     startLoading('Loading image metadata...');
 
     try {
       // Get metadata to retrieve default windowing
       console.log('Getting metadata...');
+      const metadataStart = performance.now();
       const metadata = await invoke('get_metadata', {
-        filePath: $activeStudyStore.currentFilePath
+        filePath: pathToLoad
       });
-      console.log('Metadata received:', metadata);
+      console.log(`Metadata received in ${(performance.now() - metadataStart).toFixed(0)}ms:`, metadata);
 
       // Update windowing from metadata if available
       if (metadata.window_center && metadata.window_width) {
@@ -49,25 +62,29 @@
       // Load image with default or current windowing
       startLoading('Decoding pixel data...');
       console.log('Getting image data with windowing:', windowCenter, windowWidth);
+      const imageStart = performance.now();
       const base64Png = await invoke('get_image_data', {
-        filePath: $activeStudyStore.currentFilePath,
+        filePath: pathToLoad,
         windowCenter: windowCenter,
         windowWidth: windowWidth
       });
-      console.log('Image data received, length:', base64Png.length);
+      console.log(`Image data received in ${(performance.now() - imageStart).toFixed(0)}ms, base64 length:`, base64Png.length);
 
       // Update store with image data
       activeStudyStore.update(store => ({
         ...store,
         currentImageData: `data:image/png;base64,${base64Png}`
       }));
-      console.log('Image loaded successfully');
 
-      finishLoading('Image loaded');
+      const totalTime = (performance.now() - startTime).toFixed(0);
+      console.log(`Image loaded successfully in ${totalTime}ms total`);
+
+      finishLoading(`Image loaded (${totalTime}ms)`);
     } catch (error) {
       console.error('Failed to load image:', error);
       loadError = error.toString();
       setError(`Failed to load image: ${error}`);
+      currentLoadingPath = null; // Reset on error so user can retry
     } finally {
       isLoading = false;
     }
