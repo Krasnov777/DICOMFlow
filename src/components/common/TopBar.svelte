@@ -1,6 +1,7 @@
 <script>
   import { connectionStore } from '../../stores/connectionStore';
   import { activeStudyStore } from '../../stores/activeStudyStore';
+  import { startLoading, finishLoading, setError } from '../../stores/loadingStore';
   import { invoke } from '@tauri-apps/api/core';
   import { open } from '@tauri-apps/plugin-dialog';
   import { push } from 'svelte-spa-router';
@@ -20,6 +21,8 @@
       console.log('Selected file:', selected);
 
       if (selected) {
+        startLoading('Loading DICOM file...');
+
         // Call backend to load the file
         const fileInfo = await invoke('open_dicom_file', { path: selected });
 
@@ -43,12 +46,14 @@
 
         console.log('Loaded DICOM file:', fileInfo);
 
+        finishLoading('File loaded successfully');
+
         // Navigate to viewer
         push('/viewer');
       }
     } catch (error) {
       console.error('Failed to open file:', error);
-      alert('Failed to open file: ' + error);
+      setError(error.toString());
     }
   }
 
@@ -62,6 +67,7 @@
 
       if (selected) {
         console.log('Opening directory:', selected);
+        startLoading('Scanning DICOM directory...');
 
         // Organize directory into study/series structure
         const studyInfo = await invoke('organize_directory', { path: selected });
@@ -90,15 +96,18 @@
 
           console.log('Loaded study with', studyInfo.series.length, 'series');
 
+          finishLoading(`Loaded ${studyInfo.series.length} series`);
+
           // Navigate to viewer
           push('/viewer');
         } else {
+          finishLoading();
           alert('No DICOM files found in the selected directory');
         }
       }
     } catch (error) {
       console.error('Failed to open directory:', error);
-      alert('Failed to open directory: ' + error);
+      setError(error.toString());
     }
   }
 </script>

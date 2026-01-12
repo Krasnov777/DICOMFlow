@@ -1,11 +1,13 @@
 <script>
   import { activeStudyStore } from '../stores/activeStudyStore';
+  import { startLoading, finishLoading, setError } from '../stores/loadingStore';
   import { invoke } from '@tauri-apps/api/core';
   import { save } from '@tauri-apps/plugin-dialog';
 
   let windowCenter = $activeStudyStore.windowCenter || 128;
   let windowWidth = $activeStudyStore.windowWidth || 256;
   let isLoading = false;
+  let loadError = null;
 
   // Load image when file path changes
   $: if ($activeStudyStore.currentFilePath) {
@@ -21,6 +23,9 @@
 
     console.log('Starting image load for:', $activeStudyStore.currentFilePath);
     isLoading = true;
+    loadError = null;
+    startLoading('Loading image metadata...');
+
     try {
       // Get metadata to retrieve default windowing
       console.log('Getting metadata...');
@@ -42,6 +47,7 @@
       }
 
       // Load image with default or current windowing
+      startLoading('Decoding pixel data...');
       console.log('Getting image data with windowing:', windowCenter, windowWidth);
       const base64Png = await invoke('get_image_data', {
         filePath: $activeStudyStore.currentFilePath,
@@ -56,9 +62,12 @@
         currentImageData: `data:image/png;base64,${base64Png}`
       }));
       console.log('Image loaded successfully');
+
+      finishLoading('Image loaded');
     } catch (error) {
       console.error('Failed to load image:', error);
-      alert(`Failed to load image: ${error}`);
+      loadError = error.toString();
+      setError(`Failed to load image: ${error}`);
     } finally {
       isLoading = false;
     }
@@ -68,6 +77,7 @@
     if (!$activeStudyStore.currentFilePath) return;
 
     isLoading = true;
+    startLoading('Applying windowing...');
     try {
       // Apply new windowing
       const base64Png = await invoke('apply_windowing', {
@@ -83,8 +93,11 @@
         windowCenter: windowCenter,
         windowWidth: windowWidth
       }));
+
+      finishLoading('Windowing applied');
     } catch (error) {
       console.error('Failed to apply windowing:', error);
+      setError(`Failed to apply windowing: ${error}`);
     } finally {
       isLoading = false;
     }
@@ -92,7 +105,7 @@
 
   async function exportPNG() {
     if (!$activeStudyStore.currentFilePath) {
-      alert('No image loaded');
+      setError('No image loaded');
       return;
     }
 
@@ -107,6 +120,8 @@
 
       if (!outputPath) return;
 
+      startLoading('Exporting PNG...');
+
       await invoke('export_image_png', {
         filePath: $activeStudyStore.currentFilePath,
         outputPath,
@@ -114,10 +129,10 @@
         windowWidth
       });
 
-      alert(`Image exported to ${outputPath}`);
+      finishLoading(`Exported to ${outputPath.split('/').pop()}`);
     } catch (error) {
       console.error('Export failed:', error);
-      alert(`Export failed: ${error}`);
+      setError(`Export failed: ${error}`);
     }
   }
 
@@ -241,13 +256,24 @@
     <div class="flex-1 bg-black flex items-center justify-center relative">
       {#if isLoading}
         <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 z-10">
-          <div class="text-white">Loading image...</div>
+          <div class="flex flex-col items-center gap-2">
+            <svg class="animate-spin h-8 w-8 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <div class="text-white">Loading image...</div>
+          </div>
         </div>
       {/if}
-      {#if $activeStudyStore.currentImageData}
+      {#if loadError}
+        <div class="text-center p-8">
+          <p class="text-red-400 mb-2">Failed to load image</p>
+          <p class="text-gray-500 text-sm">{loadError}</p>
+        </div>
+      {:else if $activeStudyStore.currentImageData}
         <img src={$activeStudyStore.currentImageData} alt="DICOM" class="max-w-full max-h-full" />
       {:else if !isLoading}
-        <p class="text-gray-500">No image loaded</p>
+        <p class="text-gray-500">No image loaded. Use "Open File" or "Open Directory" to load DICOM files.</p>
       {/if}
     </div>
 

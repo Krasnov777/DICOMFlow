@@ -1,5 +1,6 @@
 <script>
   import { connectionStore } from '../stores/connectionStore';
+  import { startLoading, finishLoading, setError } from '../stores/loadingStore';
   import { invoke } from '@tauri-apps/api/core';
 
   let activeTab = 'scp';
@@ -26,20 +27,26 @@
   let echoStatus = '';
 
   async function startScp() {
+    startLoading('Starting SCP server...');
     try {
       await invoke('start_scp', { port: scpPort, aeTitle: scpAeTitle });
       connectionStore.update(store => ({ ...store, scpRunning: true }));
+      finishLoading(`SCP server started on port ${scpPort}`);
     } catch (error) {
       console.error('Failed to start SCP:', error);
+      setError(`Failed to start SCP: ${error}`);
     }
   }
 
   async function stopScp() {
+    startLoading('Stopping SCP server...');
     try {
       await invoke('stop_scp');
       connectionStore.update(store => ({ ...store, scpRunning: false }));
+      finishLoading('SCP server stopped');
     } catch (error) {
       console.error('Failed to stop SCP:', error);
+      setError(`Failed to stop SCP: ${error}`);
     }
   }
 
@@ -48,13 +55,20 @@
 
     const endpoint = pacsEndpoints[selectedEndpointIndex];
     echoStatus = 'Testing connection...';
+    startLoading('Testing PACS connection...');
 
     try {
       const result = await invoke('c_echo', { endpoint });
       echoStatus = result ? '✓ Connection successful!' : '✗ Connection failed';
+      if (result) {
+        finishLoading('Connection successful');
+      } else {
+        setError('Connection failed');
+      }
     } catch (error) {
       console.error('C-ECHO failed:', error);
       echoStatus = `✗ Error: ${error}`;
+      setError(`C-ECHO failed: ${error}`);
     }
   }
 
@@ -64,6 +78,7 @@
     const endpoint = pacsEndpoints[selectedEndpointIndex];
     isQuerying = true;
     queryResults = [];
+    startLoading('Searching PACS...');
 
     try {
       const params = {
@@ -76,9 +91,10 @@
 
       const results = await invoke('c_find', { endpoint, params });
       queryResults = results;
+      finishLoading(`Found ${results.length} results`);
     } catch (error) {
       console.error('C-FIND failed:', error);
-      alert(`Search failed: ${error}`);
+      setError(`Search failed: ${error}`);
     } finally {
       isQuerying = false;
     }

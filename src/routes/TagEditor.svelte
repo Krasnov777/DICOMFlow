@@ -1,6 +1,7 @@
 <script>
   import { tagEditorStore } from '../stores/tagEditorStore';
   import { activeStudyStore } from '../stores/activeStudyStore';
+  import { startLoading, finishLoading, setError } from '../stores/loadingStore';
   import { invoke } from '@tauri-apps/api/core';
   import { save } from '@tauri-apps/plugin-dialog';
 
@@ -105,11 +106,12 @@
 
   async function handleAnonymize() {
     if (!$activeStudyStore.currentFilePath) {
-      alert('No file loaded');
+      setError('No file loaded');
       return;
     }
 
     isAnonymizing = true;
+    startLoading(`Anonymizing with ${anonymizationTemplate} template...`);
 
     try {
       const anonymizedPaths = await invoke('anonymize_study', {
@@ -117,10 +119,10 @@
         templateName: anonymizationTemplate
       });
 
-      alert(`Anonymized file created: ${anonymizedPaths[0]}`);
+      finishLoading(`Anonymized file created: ${anonymizedPaths[0].split('/').pop()}`);
     } catch (error) {
       console.error('Anonymization failed:', error);
-      alert(`Anonymization failed: ${error}`);
+      setError(`Anonymization failed: ${error}`);
     } finally {
       isAnonymizing = false;
     }
@@ -128,7 +130,7 @@
 
   async function handleExport(format) {
     if (!$activeStudyStore.currentFilePath) {
-      alert('No file loaded');
+      setError('No file loaded');
       return;
     }
 
@@ -143,6 +145,8 @@
 
       if (!outputPath) return;
 
+      startLoading(`Exporting tags as ${format.toUpperCase()}...`);
+
       if (format === 'json') {
         await invoke('export_tags_json', {
           filePath: $activeStudyStore.currentFilePath,
@@ -155,10 +159,10 @@
         });
       }
 
-      alert(`Tags exported to ${outputPath}`);
+      finishLoading(`Tags exported to ${outputPath.split('/').pop()}`);
     } catch (error) {
       console.error('Export failed:', error);
-      alert(`Export failed: ${error}`);
+      setError(`Export failed: ${error}`);
     }
   }
 
