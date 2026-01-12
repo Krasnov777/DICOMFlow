@@ -23,7 +23,13 @@
     "fs:allow-exists",
     "fs:allow-create",
     "fs:allow-remove",
+    "fs:allow-stat",
+    "fs:allow-read-text-file",
+    "fs:allow-write-text-file",
     "fs:scope-home",
+    "fs:scope-document",
+    "fs:scope-download",
+    "fs:scope-desktop",
     "shell:default",
     "shell:allow-execute"
   ]

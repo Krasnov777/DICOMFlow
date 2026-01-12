@@ -10,14 +10,7 @@
     { path: '/settings', label: 'Settings', icon: '⚙️' },
   ];
 
-  function isActive(path) {
-    console.log('Checking active:', path, 'current:', $location);
-    return $location === path;
-  }
-
-  $: {
-    console.log('Current location:', $location);
-  }
+  $: currentPath = $location;
 </script>
 
 <aside class="w-64 bg-gray-900 border-r border-gray-700 flex flex-col">
@@ -30,7 +23,7 @@
       <a
         href="#{item.path}"
         class="flex items-center gap-3 px-4 py-3 rounded-lg transition-colors
-               {isActive(item.path)
+               {currentPath === item.path
                  ? 'bg-primary-600 text-white'
                  : 'text-gray-300 hover:bg-gray-800'}"
       >
