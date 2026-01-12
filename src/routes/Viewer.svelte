@@ -9,23 +9,31 @@
 
   // Load image when file path changes
   $: if ($activeStudyStore.currentFilePath) {
+    console.log('File path changed, loading image:', $activeStudyStore.currentFilePath);
     loadImage();
   }
 
   async function loadImage() {
-    if (!$activeStudyStore.currentFilePath) return;
+    if (!$activeStudyStore.currentFilePath) {
+      console.log('No file path, skipping image load');
+      return;
+    }
 
+    console.log('Starting image load for:', $activeStudyStore.currentFilePath);
     isLoading = true;
     try {
       // Get metadata to retrieve default windowing
+      console.log('Getting metadata...');
       const metadata = await invoke('get_metadata', {
         filePath: $activeStudyStore.currentFilePath
       });
+      console.log('Metadata received:', metadata);
 
       // Update windowing from metadata if available
       if (metadata.window_center && metadata.window_width) {
         windowCenter = metadata.window_center;
         windowWidth = metadata.window_width;
+        console.log('Using windowing from metadata:', windowCenter, windowWidth);
         activeStudyStore.update(store => ({
           ...store,
           windowCenter: metadata.window_center,
@@ -34,17 +42,20 @@
       }
 
       // Load image with default or current windowing
+      console.log('Getting image data with windowing:', windowCenter, windowWidth);
       const base64Png = await invoke('get_image_data', {
         filePath: $activeStudyStore.currentFilePath,
         windowCenter: windowCenter,
         windowWidth: windowWidth
       });
+      console.log('Image data received, length:', base64Png.length);
 
       // Update store with image data
       activeStudyStore.update(store => ({
         ...store,
         currentImageData: `data:image/png;base64,${base64Png}`
       }));
+      console.log('Image loaded successfully');
     } catch (error) {
       console.error('Failed to load image:', error);
       alert(`Failed to load image: ${error}`);

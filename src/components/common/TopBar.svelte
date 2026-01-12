@@ -3,6 +3,7 @@
   import { activeStudyStore } from '../../stores/activeStudyStore';
   import { invoke } from '@tauri-apps/api/core';
   import { open } from '@tauri-apps/plugin-dialog';
+  import { push } from 'svelte-spa-router';
 
   async function handleOpenFile() {
     console.log('Open File button clicked');
@@ -37,9 +38,13 @@
           currentSeriesUID: fileInfo.series_instance_uid,
           currentFilePath: selected,
           tags: tags,
+          series: [], // Clear series for single file
         }));
 
         console.log('Loaded DICOM file:', fileInfo);
+
+        // Navigate to viewer
+        push('/viewer');
       }
     } catch (error) {
       console.error('Failed to open file:', error);
@@ -56,6 +61,8 @@
       });
 
       if (selected) {
+        console.log('Opening directory:', selected);
+
         // Organize directory into study/series structure
         const studyInfo = await invoke('organize_directory', { path: selected });
 
@@ -82,6 +89,9 @@
           }));
 
           console.log('Loaded study with', studyInfo.series.length, 'series');
+
+          // Navigate to viewer
+          push('/viewer');
         } else {
           alert('No DICOM files found in the selected directory');
         }
@@ -94,15 +104,25 @@
 </script>
 
 <header class="h-14 bg-gray-900 border-b border-gray-700 flex items-center justify-between px-6">
-  <div class="flex items-center gap-4">
-    <span class="text-sm text-gray-400">Connections:</span>
-    {#if $connectionStore.scpRunning}
-      <span class="px-2 py-1 bg-green-600 text-xs rounded">SCP Active</span>
-    {/if}
-    {#if $connectionStore.activeDicomWebEndpoint}
-      <span class="px-2 py-1 bg-blue-600 text-xs rounded">
-        DICOMweb: {$connectionStore.activeDicomWebEndpoint}
-      </span>
+  <div class="flex items-center gap-4 flex-1 overflow-hidden">
+    <div class="flex items-center gap-2">
+      <span class="text-sm text-gray-400">Connections:</span>
+      {#if $connectionStore.scpRunning}
+        <span class="px-2 py-1 bg-green-600 text-xs rounded">SCP Active</span>
+      {/if}
+      {#if $connectionStore.activeDicomWebEndpoint}
+        <span class="px-2 py-1 bg-blue-600 text-xs rounded">
+          DICOMweb: {$connectionStore.activeDicomWebEndpoint}
+        </span>
+      {/if}
+    </div>
+    {#if $activeStudyStore.currentFilePath}
+      <div class="flex items-center gap-2 border-l border-gray-700 pl-4">
+        <span class="text-sm text-gray-400">Loaded:</span>
+        <span class="px-2 py-1 bg-purple-600 text-xs rounded max-w-md truncate" title={$activeStudyStore.currentFilePath}>
+          {$activeStudyStore.patientName || 'Unknown'} - {$activeStudyStore.studyDate || 'N/A'}
+        </span>
+      </div>
     {/if}
   </div>
 
