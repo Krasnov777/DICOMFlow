@@ -53,5 +53,8 @@ temp/
 tmp/
 *.tmp
 
+# Test data (anonymized outputs)
+test-data/samples/Anonymized_*/
+
 # OS
 Thumbs.db
