@@ -2,6 +2,7 @@ pub mod client;
 pub mod qido;
 pub mod wado;
 pub mod stow;
+pub mod config;
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

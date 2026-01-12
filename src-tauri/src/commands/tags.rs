@@ -27,9 +27,10 @@ pub async fn update_tag(
     // Update tag
     crate::dicom::tags::update_tag(&mut obj, tag_parsed, value).map_err(|e| e.to_string())?;
 
-    // Save file - note: modifications to in-memory DICOM objects require re-opening the file
-    // For now, we acknowledge this limitation
-    tracing::warn!("Tag updated for {} - file not persisted (requires FileDicomObject conversion)", file_path);
+    // Save modified file
+    crate::dicom::save_dicom_file(&obj, &file_path).map_err(|e| e.to_string())?;
+
+    tracing::info!("Tag updated and saved for {}", file_path);
 
     Ok(())
 }
@@ -61,9 +62,10 @@ pub async fn delete_tag(file_path: String, tag: String) -> Result<(), String> {
     // Delete tag
     crate::dicom::tags::delete_tag(&mut obj, tag_parsed).map_err(|e| e.to_string())?;
 
-    // Save file - note: modifications to in-memory DICOM objects require re-opening the file
-    // For now, we acknowledge this limitation
-    tracing::warn!("Tag updated for {} - file not persisted (requires FileDicomObject conversion)", file_path);
+    // Save modified file
+    crate::dicom::save_dicom_file(&obj, &file_path).map_err(|e| e.to_string())?;
+
+    tracing::info!("Tag deleted and saved for {}", file_path);
 
     Ok(())
 }
@@ -101,9 +103,10 @@ pub async fn anonymize_study(
             anon_path
         };
 
-        // Save anonymized file - note: this is a placeholder
-        // Writing modified InMemDicomObject requires conversion to FileDicomObject
-        tracing::warn!("Anonymized {} - file not persisted (requires FileDicomObject conversion)", anon_path);
+        // Save anonymized file
+        crate::dicom::save_dicom_file(&obj, &anon_path).map_err(|e| e.to_string())?;
+
+        tracing::info!("Anonymized file saved to {}", anon_path);
 
         anonymized_paths.push(anon_path);
     }

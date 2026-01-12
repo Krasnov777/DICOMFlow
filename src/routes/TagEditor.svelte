@@ -72,7 +72,7 @@
         });
       }
 
-      alert('Tag updated successfully (note: in-memory only)');
+      alert('Tag updated successfully');
       cancelEdit();
     } catch (error) {
       console.error('Failed to update tag:', error);
@@ -96,7 +96,7 @@
         tags: store.tags.filter(t => t.tag !== tag.tag)
       }));
 
-      alert('Tag deleted successfully (note: in-memory only)');
+      alert('Tag deleted successfully');
     } catch (error) {
       console.error('Failed to delete tag:', error);
       alert(`Failed to delete tag: ${error}`);
@@ -117,7 +117,7 @@
         templateName: anonymizationTemplate
       });
 
-      alert(`Anonymized file created: ${anonymizedPaths[0]}\n\nNote: File saved with _anon suffix (in-memory limitation)`);
+      alert(`Anonymized file created: ${anonymizedPaths[0]}`);
     } catch (error) {
       console.error('Anonymization failed:', error);
       alert(`Anonymization failed: ${error}`);
@@ -186,7 +186,7 @@
       tags: store.tags.filter(t => !t.is_private)
     }));
 
-    alert(`Deleted ${privateTags.length} private tags (in-memory only)`);
+    alert(`Deleted ${privateTags.length} private tags`);
   }
 </script>
 
