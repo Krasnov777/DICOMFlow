@@ -14,6 +14,7 @@
     "targets": "all"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "fullscreen": false,
@@ -28,8 +29,7 @@
     ],
     "security": {
       "csp": null,
-      "capabilities": ["default"],
-      "dangerousDisableAssetCspModification": true
+      "capabilities": ["default"]
     }
   }
 }
