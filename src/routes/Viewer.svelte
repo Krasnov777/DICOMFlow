@@ -288,7 +288,18 @@
           <p class="text-gray-500 text-sm">{loadError}</p>
         </div>
       {:else if $activeStudyStore.currentImageData}
-        <img src={$activeStudyStore.currentImageData} alt="DICOM" class="max-w-full max-h-full" />
+        <div class="w-full h-full flex items-center justify-center relative">
+          <img
+            src={$activeStudyStore.currentImageData}
+            alt="DICOM"
+            class="max-w-full max-h-full"
+            on:load={() => console.log('Image loaded successfully!')}
+            on:error={(e) => console.error('Image failed to load:', e, 'src length:', $activeStudyStore.currentImageData?.length)}
+          />
+          <div class="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs p-2 rounded">
+            Data length: {$activeStudyStore.currentImageData?.length || 0}
+          </div>
+        </div>
       {:else if !isLoading}
         <p class="text-gray-500">No image loaded. Use "Open File" or "Open Directory" to load DICOM files.</p>
       {/if}
