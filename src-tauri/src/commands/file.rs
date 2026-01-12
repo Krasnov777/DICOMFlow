@@ -50,7 +50,7 @@ pub async fn open_dicom_directory(path: String) -> Result<Vec<DicomFileInfo>, St
     Ok(file_infos)
 }
 
-#[derive(Debug, serde::Serialize)]
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct DicomFileInfo {
     pub path: String,
     pub study_instance_uid: String,
@@ -60,4 +60,73 @@ pub struct DicomFileInfo {
     pub patient_id: Option<String>,
     pub study_date: Option<String>,
     pub modality: Option<String>,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct SeriesInfo {
+    pub series_instance_uid: String,
+    pub description: Option<String>,
+    pub modality: Option<String>,
+    pub instances: Vec<DicomFileInfo>,
+}
+
+#[derive(Debug, serde::Serialize)]
+pub struct StudyInfo {
+    pub study_instance_uid: String,
+    pub patient_name: Option<String>,
+    pub patient_id: Option<String>,
+    pub study_date: Option<String>,
+    pub series: Vec<SeriesInfo>,
+}
+
+#[tauri::command]
+pub async fn organize_directory(path: String) -> Result<StudyInfo, String> {
+    use std::collections::HashMap;
+
+    let file_infos = open_dicom_directory(path).await?;
+
+    if file_infos.is_empty() {
+        return Err("No DICOM files found in directory".to_string());
+    }
+
+    // Group files by series
+    let mut series_map: HashMap<String, Vec<DicomFileInfo>> = HashMap::new();
+
+    for file_info in file_infos {
+        series_map
+            .entry(file_info.series_instance_uid.clone())
+            .or_insert_with(Vec::new)
+            .push(file_info);
+    }
+
+    // Create series info
+    let mut series_list: Vec<SeriesInfo> = series_map
+        .into_iter()
+        .map(|(series_uid, instances)| {
+            let modality = instances.first().and_then(|i| i.modality.clone());
+            SeriesInfo {
+                series_instance_uid: series_uid,
+                description: None, // Would need to read SeriesDescription tag
+                modality,
+                instances,
+            }
+        })
+        .collect();
+
+    // Sort series by UID
+    series_list.sort_by(|a, b| a.series_instance_uid.cmp(&b.series_instance_uid));
+
+    // Get study info from first file
+    let first_file = series_list
+        .first()
+        .and_then(|s| s.instances.first())
+        .ok_or("No files found")?;
+
+    Ok(StudyInfo {
+        study_instance_uid: first_file.study_instance_uid.clone(),
+        patient_name: first_file.patient_name.clone(),
+        patient_id: first_file.patient_id.clone(),
+        study_date: first_file.study_date.clone(),
+        series: series_list,
+    })
 }

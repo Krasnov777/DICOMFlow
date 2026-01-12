@@ -6,9 +6,9 @@ export const activeStudyStore = writable({
   patientID: null,
   studyDate: null,
   modality: null,
-  series: [],
-  currentSeriesUID: null,
-  currentInstanceUID: null,
+  series: [], // Array of SeriesInfo objects
+  currentSeriesIndex: 0,
+  currentInstanceIndex: 0,
   currentImageData: null,
   currentFilePath: null,
   tags: [],

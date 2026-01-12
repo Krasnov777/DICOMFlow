@@ -30,6 +30,7 @@ async fn main() {
             // File operations
             commands::file::open_dicom_file,
             commands::file::open_dicom_directory,
+            commands::file::organize_directory,
 
             // DICOM viewing
             commands::viewer::get_image_data,

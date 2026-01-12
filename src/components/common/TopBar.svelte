@@ -53,24 +53,32 @@
       });
 
       if (selected) {
-        // Call backend to scan directory
-        const files = await invoke('open_dicom_directory', { path: selected });
+        // Organize directory into study/series structure
+        const studyInfo = await invoke('organize_directory', { path: selected });
 
-        if (files.length > 0) {
-          // Load the first file's metadata into the store
-          const firstFile = files[0];
+        if (studyInfo && studyInfo.series.length > 0) {
+          // Get first instance of first series
+          const firstSeries = studyInfo.series[0];
+          const firstInstance = firstSeries.instances[0];
+
+          // Load tags for first instance
+          const tags = await invoke('get_all_tags', { filePath: firstInstance.path });
+
+          // Update store with organized structure
           activeStudyStore.update(store => ({
             ...store,
-            studyInstanceUID: firstFile.study_instance_uid,
-            patientName: firstFile.patient_name,
-            patientID: firstFile.patient_id,
-            studyDate: firstFile.study_date,
-            modality: firstFile.modality,
-            currentInstanceUID: firstFile.sop_instance_uid,
-            currentSeriesUID: firstFile.series_instance_uid,
+            studyInstanceUID: studyInfo.study_instance_uid,
+            patientName: studyInfo.patient_name,
+            patientID: studyInfo.patient_id,
+            studyDate: studyInfo.study_date,
+            series: studyInfo.series,
+            currentSeriesIndex: 0,
+            currentInstanceIndex: 0,
+            currentFilePath: firstInstance.path,
+            tags: tags,
           }));
 
-          console.log(`Loaded ${files.length} DICOM files from directory`);
+          console.log('Loaded study with', studyInfo.series.length, 'series');
         } else {
           alert('No DICOM files found in the selected directory');
         }

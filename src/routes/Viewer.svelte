@@ -1,6 +1,7 @@
 <script>
   import { activeStudyStore } from '../stores/activeStudyStore';
   import { invoke } from '@tauri-apps/api/core';
+  import { save } from '@tauri-apps/plugin-dialog';
 
   let windowCenter = $activeStudyStore.windowCenter || 128;
   let windowWidth = $activeStudyStore.windowWidth || 256;
@@ -77,6 +78,92 @@
       isLoading = false;
     }
   }
+
+  async function exportPNG() {
+    if (!$activeStudyStore.currentFilePath) {
+      alert('No image loaded');
+      return;
+    }
+
+    try {
+      const outputPath = await save({
+        defaultPath: 'image.png',
+        filters: [{
+          name: 'PNG Image',
+          extensions: ['png']
+        }]
+      });
+
+      if (!outputPath) return;
+
+      await invoke('export_image_png', {
+        filePath: $activeStudyStore.currentFilePath,
+        outputPath,
+        windowCenter,
+        windowWidth
+      });
+
+      alert(`Image exported to ${outputPath}`);
+    } catch (error) {
+      console.error('Export failed:', error);
+      alert(`Export failed: ${error}`);
+    }
+  }
+
+  async function loadInstance(seriesIndex, instanceIndex) {
+    const series = $activeStudyStore.series[seriesIndex];
+    if (!series || !series.instances[instanceIndex]) return;
+
+    const instance = series.instances[instanceIndex];
+
+    // Load tags for this instance
+    const tags = await invoke('get_all_tags', { filePath: instance.path });
+
+    activeStudyStore.update(store => ({
+      ...store,
+      currentSeriesIndex: seriesIndex,
+      currentInstanceIndex: instanceIndex,
+      currentFilePath: instance.path,
+      tags: tags,
+    }));
+  }
+
+  function nextInstance() {
+    const currentSeries = $activeStudyStore.series[$activeStudyStore.currentSeriesIndex];
+    if (!currentSeries) return;
+
+    let nextIndex = $activeStudyStore.currentInstanceIndex + 1;
+    let nextSeriesIndex = $activeStudyStore.currentSeriesIndex;
+
+    // If we're at the end of this series, go to next series
+    if (nextIndex >= currentSeries.instances.length) {
+      nextSeriesIndex += 1;
+      nextIndex = 0;
+    }
+
+    // Check if next series exists
+    if (nextSeriesIndex < $activeStudyStore.series.length) {
+      loadInstance(nextSeriesIndex, nextIndex);
+    }
+  }
+
+  function previousInstance() {
+    let prevIndex = $activeStudyStore.currentInstanceIndex - 1;
+    let prevSeriesIndex = $activeStudyStore.currentSeriesIndex;
+
+    // If we're at the beginning of this series, go to previous series
+    if (prevIndex < 0) {
+      prevSeriesIndex -= 1;
+      if (prevSeriesIndex >= 0) {
+        const prevSeries = $activeStudyStore.series[prevSeriesIndex];
+        prevIndex = prevSeries.instances.length - 1;
+      } else {
+        return; // Already at first instance
+      }
+    }
+
+    loadInstance(prevSeriesIndex, prevIndex);
+  }
 </script>
 
 <div class="flex h-full">
@@ -84,10 +171,54 @@
   <div class="w-64 bg-gray-700 p-4 overflow-y-auto">
     <h2 class="text-lg font-semibold mb-4">Study Browser</h2>
     {#if $activeStudyStore.studyInstanceUID}
-      <div class="space-y-2">
-        <p class="text-sm"><strong>Patient:</strong> {$activeStudyStore.patientName || 'N/A'}</p>
-        <p class="text-sm"><strong>ID:</strong> {$activeStudyStore.patientID || 'N/A'}</p>
-        <p class="text-sm"><strong>Date:</strong> {$activeStudyStore.studyDate || 'N/A'}</p>
+      <div class="space-y-4">
+        <div class="space-y-2">
+          <p class="text-sm"><strong>Patient:</strong> {$activeStudyStore.patientName || 'N/A'}</p>
+          <p class="text-sm"><strong>ID:</strong> {$activeStudyStore.patientID || 'N/A'}</p>
+          <p class="text-sm"><strong>Date:</strong> {$activeStudyStore.studyDate || 'N/A'}</p>
+        </div>
+
+        {#if $activeStudyStore.series && $activeStudyStore.series.length > 0}
+          <div class="space-y-2">
+            <h3 class="text-sm font-semibold">Series ({$activeStudyStore.series.length})</h3>
+            {#each $activeStudyStore.series as series, seriesIndex}
+              <div
+                class="p-2 rounded text-xs cursor-pointer transition"
+                class:bg-primary-600={seriesIndex === $activeStudyStore.currentSeriesIndex}
+                class:bg-gray-600={seriesIndex !== $activeStudyStore.currentSeriesIndex}
+                class:hover:bg-gray-500={seriesIndex !== $activeStudyStore.currentSeriesIndex}
+                on:click={() => loadInstance(seriesIndex, 0)}
+              >
+                <div class="font-semibold">{series.modality || 'Unknown'}</div>
+                <div class="text-gray-300">{series.instances.length} images</div>
+              </div>
+            {/each}
+          </div>
+
+          {#if $activeStudyStore.series[$activeStudyStore.currentSeriesIndex]}
+            <div class="space-y-2">
+              <h3 class="text-sm font-semibold">Instance</h3>
+              <div class="text-xs">
+                {$activeStudyStore.currentInstanceIndex + 1} / {$activeStudyStore.series[$activeStudyStore.currentSeriesIndex].instances.length}
+              </div>
+              <div class="flex gap-2">
+                <button
+                  on:click={previousInstance}
+                  class="flex-1 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs"
+                  disabled={$activeStudyStore.currentSeriesIndex === 0 && $activeStudyStore.currentInstanceIndex === 0}
+                >
+                  ← Prev
+                </button>
+                <button
+                  on:click={nextInstance}
+                  class="flex-1 px-2 py-1 bg-gray-600 hover:bg-gray-500 rounded text-xs"
+                >
+                  Next →
+                </button>
+              </div>
+            </div>
+          {/if}
+        {/if}
       </div>
     {:else}
       <p class="text-gray-400 text-sm">No study loaded</p>
@@ -111,31 +242,40 @@
 
     <!-- Windowing Controls -->
     <div class="bg-gray-700 p-4 space-y-2">
-      <div class="flex items-center gap-4">
-        <label class="flex items-center gap-2">
-          <span class="text-sm">W/C:</span>
-          <input
-            type="range"
-            min="-1000"
-            max="1000"
-            bind:value={windowCenter}
-            on:change={applyWindowing}
-            class="w-32"
-          />
-          <span class="text-sm w-12">{windowCenter}</span>
-        </label>
-        <label class="flex items-center gap-2">
-          <span class="text-sm">W/W:</span>
-          <input
-            type="range"
-            min="1"
-            max="2000"
-            bind:value={windowWidth}
-            on:change={applyWindowing}
-            class="w-32"
-          />
-          <span class="text-sm w-12">{windowWidth}</span>
-        </label>
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <label class="flex items-center gap-2">
+            <span class="text-sm">W/C:</span>
+            <input
+              type="range"
+              min="-1000"
+              max="1000"
+              bind:value={windowCenter}
+              on:change={applyWindowing}
+              class="w-32"
+            />
+            <span class="text-sm w-12">{windowCenter}</span>
+          </label>
+          <label class="flex items-center gap-2">
+            <span class="text-sm">W/W:</span>
+            <input
+              type="range"
+              min="1"
+              max="2000"
+              bind:value={windowWidth}
+              on:change={applyWindowing}
+              class="w-32"
+            />
+            <span class="text-sm w-12">{windowWidth}</span>
+          </label>
+        </div>
+        <button
+          on:click={exportPNG}
+          class="px-4 py-2 bg-primary-600 hover:bg-primary-700 rounded text-sm transition"
+          disabled={!$activeStudyStore.currentImageData}
+        >
+          Export PNG
+        </button>
       </div>
     </div>
   </div>
