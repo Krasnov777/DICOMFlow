@@ -17,6 +17,7 @@ pub fn parse_and_validate<P: AsRef<Path>>(path: P) -> Result<InMemDicomObject> {
 }
 
 /// DICOM file with its path
+#[derive(Debug)]
 pub struct ParsedDicomFile {
     pub path: String,
     pub object: InMemDicomObject,
