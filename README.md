@@ -1,5 +1,7 @@
 # DICOMFlow
 
+![DICOMFlow Banner](docs/site_logo.png)
+
 A professional DICOM medical imaging toolkit built with Rust, Tauri v2, and Svelte.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
