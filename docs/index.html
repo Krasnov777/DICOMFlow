@@ -10,38 +10,63 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Favicon placeholder -->
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="favicon.png">
 
     <style>
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        body {
+            background-color: #1e1e1e;
+            color: #e0e0e0;
+        }
+        .hero-bg {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
         }
         .feature-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: #252526;
+            border: 1px solid #3c3c3c;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
         }
         .feature-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            border-color: #4a9eff;
+        }
+        .accent-blue {
+            color: #4a9eff;
+        }
+        .bg-accent-blue {
+            background-color: #4a9eff;
+        }
+        .bg-accent-blue:hover {
+            background-color: #3d8bdb;
+        }
+        .nav-link:hover {
+            color: #4a9eff;
+        }
+        .section-dark {
+            background-color: #252526;
+        }
+        .border-dark {
+            border-color: #3c3c3c;
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body class="bg-[#1e1e1e] text-gray-200">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm fixed w-full top-0 z-50">
+    <nav class="bg-[#252526] border-b border-[#3c3c3c] fixed w-full top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <span class="text-2xl font-bold text-indigo-600">DICOMFlow</span>
+                    <span class="text-2xl font-bold accent-blue">DICOMFlow</span>
                 </div>
                 <div class="hidden md:flex space-x-8">
-                    <a href="#features" class="text-gray-700 hover:text-indigo-600 transition">Features</a>
-                    <a href="#download" class="text-gray-700 hover:text-indigo-600 transition">Download</a>
-                    <a href="#documentation" class="text-gray-700 hover:text-indigo-600 transition">Docs</a>
-                    <a href="https://github.com/Krasnov777/DICOMFlow" target="_blank" class="text-gray-700 hover:text-indigo-600 transition">GitHub</a>
+                    <a href="#features" class="text-gray-300 nav-link transition">Features</a>
+                    <a href="#download" class="text-gray-300 nav-link transition">Download</a>
+                    <a href="#documentation" class="text-gray-300 nav-link transition">Docs</a>
+                    <a href="https://github.com/Krasnov777/DICOMFlow" target="_blank" class="text-gray-300 nav-link transition">GitHub</a>
                 </div>
                 <div>
-                    <a href="#download" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition">
+                    <a href="#download" class="bg-accent-blue text-white px-6 py-2 rounded-lg hover:bg-[#3d8bdb] transition">
                         Download
                     </a>
                 </div>
@@ -50,28 +75,28 @@
     </nav>
 
     <!-- Hero Section -->
-    <section class="gradient-bg text-white pt-32 pb-20">
+    <section class="hero-bg pt-32 pb-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
                 <!-- Banner Logo -->
                 <div class="mb-8">
                     <img src="banner.png" alt="DICOMFlow - Seamless Medical Data Flow & Management" class="mx-auto max-w-2xl w-full h-auto rounded-lg shadow-2xl">
                 </div>
-                <h1 class="text-5xl md:text-6xl font-bold mb-6">
+                <h1 class="text-5xl md:text-6xl font-bold mb-6 text-white">
                     Professional DICOM Toolkit
                 </h1>
-                <p class="text-xl md:text-2xl mb-8 text-indigo-100 max-w-3xl mx-auto">
+                <p class="text-xl md:text-2xl mb-8 text-gray-300 max-w-3xl mx-auto">
                     Fast, secure, and powerful DICOM viewing, editing, and anonymization for medical imaging professionals
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="#download" class="bg-white text-indigo-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-100 transition text-lg">
+                    <a href="#download" class="bg-accent-blue text-white px-8 py-4 rounded-lg font-semibold hover:bg-[#3d8bdb] transition text-lg">
                         Download Free
                     </a>
-                    <a href="https://github.com/Krasnov777/DICOMFlow" target="_blank" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-indigo-600 transition text-lg">
+                    <a href="https://github.com/Krasnov777/DICOMFlow" target="_blank" class="border-2 border-[#4a9eff] text-[#4a9eff] px-8 py-4 rounded-lg font-semibold hover:bg-[#4a9eff] hover:text-white transition text-lg">
                         View on GitHub
                     </a>
                 </div>
-                <p class="mt-6 text-indigo-200">
+                <p class="mt-6 text-gray-400">
                     Available for macOS and Windows • Free & Open Source
                 </p>
             </div>
@@ -79,102 +104,102 @@
     </section>
 
     <!-- Features Section -->
-    <section id="features" class="py-20">
+    <section id="features" class="py-20 bg-[#1e1e1e]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Everything You Need</h2>
-                <p class="text-xl text-gray-600">Comprehensive DICOM functionality in one beautiful application</p>
+                <h2 class="text-4xl font-bold text-white mb-4">Everything You Need</h2>
+                <p class="text-xl text-gray-400">Comprehensive DICOM functionality in one beautiful application</p>
             </div>
 
             <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Feature 1 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg">
-                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-[#1e3a5f] rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-[#4a9eff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Fast Image Viewing</h3>
-                    <p class="text-gray-600">Lightning-fast DICOM rendering with interactive window/level adjustment. Decode times under 50ms.</p>
+                    <h3 class="text-xl font-bold text-white mb-2">Fast Image Viewing</h3>
+                    <p class="text-gray-400">Lightning-fast DICOM rendering with interactive window/level adjustment. Decode times under 50ms.</p>
                 </div>
 
                 <!-- Feature 2 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg">
-                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-[#1e3a5f] rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-[#4a9eff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Tag Editor</h3>
-                    <p class="text-gray-600">View, edit, and delete DICOM tags with validation. Search, filter, and manage metadata effortlessly.</p>
+                    <h3 class="text-xl font-bold text-white mb-2">Tag Editor</h3>
+                    <p class="text-gray-400">View, edit, and delete DICOM tags with validation. Search, filter, and manage metadata effortlessly.</p>
                 </div>
 
                 <!-- Feature 3 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg">
-                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-[#1e3a5f] rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-[#4a9eff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">HIPAA Anonymization</h3>
-                    <p class="text-gray-600">Compliant de-identification with Basic, Full, and Research templates. Protect patient privacy.</p>
+                    <h3 class="text-xl font-bold text-white mb-2">HIPAA Anonymization</h3>
+                    <p class="text-gray-400">Compliant de-identification with Basic, Full, and Research templates. Protect patient privacy.</p>
                 </div>
 
                 <!-- Feature 4 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg">
-                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-[#1e3a5f] rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-[#4a9eff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Multi-Series Navigation</h3>
-                    <p class="text-gray-600">Browse studies with multiple series and instances. Navigate complex imaging studies effortlessly.</p>
+                    <h3 class="text-xl font-bold text-white mb-2">Multi-Series Navigation</h3>
+                    <p class="text-gray-400">Browse studies with multiple series and instances. Navigate complex imaging studies effortlessly.</p>
                 </div>
 
                 <!-- Feature 5 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg">
-                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-[#1e3a5f] rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-[#4a9eff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">DICOMweb Client</h3>
-                    <p class="text-gray-600">Modern PACS connectivity with QIDO-RS and WADO-RS. Query and retrieve from cloud PACS systems.</p>
+                    <h3 class="text-xl font-bold text-white mb-2">DICOMweb Client</h3>
+                    <p class="text-gray-400">Modern PACS connectivity with QIDO-RS and WADO-RS. Query and retrieve from cloud PACS systems.</p>
                 </div>
 
                 <!-- Feature 6 -->
-                <div class="feature-card bg-white p-8 rounded-xl shadow-lg">
-                    <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center mb-4">
-                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card p-8 rounded-xl">
+                    <div class="w-12 h-12 bg-[#1e3a5f] rounded-lg flex items-center justify-center mb-4">
+                        <svg class="w-6 h-6 text-[#4a9eff]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Export & Convert</h3>
-                    <p class="text-gray-600">Export images as PNG with custom windowing. Export tags as JSON or XML for analysis.</p>
+                    <h3 class="text-xl font-bold text-white mb-2">Export & Convert</h3>
+                    <p class="text-gray-400">Export images as PNG with custom windowing. Export tags as JSON or XML for analysis.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Performance Section -->
-    <section class="bg-gray-900 text-white py-20">
+    <section class="section-dark py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold mb-4">Built for Speed</h2>
-                <p class="text-xl text-gray-300">Performance metrics that matter</p>
+                <h2 class="text-4xl font-bold text-white mb-4">Built for Speed</h2>
+                <p class="text-xl text-gray-400">Performance metrics that matter</p>
             </div>
             <div class="grid md:grid-cols-3 gap-8 text-center">
                 <div>
-                    <div class="text-5xl font-bold text-indigo-400 mb-2">50ms</div>
+                    <div class="text-5xl font-bold accent-blue mb-2">50ms</div>
                     <div class="text-gray-400">Average image decode time</div>
                 </div>
                 <div>
-                    <div class="text-5xl font-bold text-indigo-400 mb-2">1-2s</div>
+                    <div class="text-5xl font-bold accent-blue mb-2">1-2s</div>
                     <div class="text-gray-400">Scan 1,000+ files</div>
                 </div>
                 <div>
-                    <div class="text-5xl font-bold text-indigo-400 mb-2">10-30x</div>
+                    <div class="text-5xl font-bold accent-blue mb-2">10-30x</div>
                     <div class="text-gray-400">Faster than sequential processing</div>
                 </div>
             </div>
@@ -182,77 +207,77 @@
     </section>
 
     <!-- Download Section -->
-    <section id="download" class="py-20">
+    <section id="download" class="py-20 bg-[#1e1e1e]">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 class="text-4xl font-bold text-gray-900 mb-4">Download DICOMFlow</h2>
-            <p class="text-xl text-gray-600 mb-12">Free and open source. No registration required.</p>
+            <h2 class="text-4xl font-bold text-white mb-4">Download DICOMFlow</h2>
+            <p class="text-xl text-gray-400 mb-12">Free and open source. No registration required.</p>
 
             <div class="grid md:grid-cols-2 gap-6">
                 <!-- macOS Download -->
-                <div class="bg-white p-8 rounded-xl shadow-lg">
-                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card p-8 rounded-xl">
+                    <div class="w-16 h-16 bg-[#1e3a5f] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold mb-2">macOS</h3>
-                    <p class="text-gray-600 mb-6">Apple Silicon & Intel</p>
-                    <a href="https://github.com/Krasnov777/DICOMFlow/releases/latest" class="inline-block bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold">
+                    <h3 class="text-2xl font-bold text-white mb-2">macOS</h3>
+                    <p class="text-gray-400 mb-6">Apple Silicon & Intel</p>
+                    <a href="https://github.com/Krasnov777/DICOMFlow/releases/latest" class="inline-block bg-accent-blue text-white px-8 py-3 rounded-lg hover:bg-[#3d8bdb] transition font-semibold">
                         Download .dmg
                     </a>
                     <p class="text-sm text-gray-500 mt-4">macOS 10.15+</p>
                 </div>
 
                 <!-- Windows Download -->
-                <div class="bg-white p-8 rounded-xl shadow-lg">
-                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-8 h-8 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+                <div class="feature-card p-8 rounded-xl">
+                    <div class="w-16 h-16 bg-[#1e3a5f] rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
                             <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
                         </svg>
                     </div>
-                    <h3 class="text-2xl font-bold mb-2">Windows</h3>
-                    <p class="text-gray-600 mb-6">64-bit</p>
-                    <a href="https://github.com/Krasnov777/DICOMFlow/releases/latest" class="inline-block bg-indigo-600 text-white px-8 py-3 rounded-lg hover:bg-indigo-700 transition font-semibold">
+                    <h3 class="text-2xl font-bold text-white mb-2">Windows</h3>
+                    <p class="text-gray-400 mb-6">64-bit</p>
+                    <a href="https://github.com/Krasnov777/DICOMFlow/releases/latest" class="inline-block bg-accent-blue text-white px-8 py-3 rounded-lg hover:bg-[#3d8bdb] transition font-semibold">
                         Download .msi
                     </a>
                     <p class="text-sm text-gray-500 mt-4">Windows 10+</p>
                 </div>
             </div>
 
-            <p class="mt-8 text-gray-600">
+            <p class="mt-8 text-gray-400">
                 Latest version: 0.1.0 •
-                <a href="https://github.com/Krasnov777/DICOMFlow/releases" class="text-indigo-600 hover:underline">All releases</a>
+                <a href="https://github.com/Krasnov777/DICOMFlow/releases" class="text-[#4a9eff] hover:underline">All releases</a>
             </p>
         </div>
     </section>
 
     <!-- Documentation Section -->
-    <section id="documentation" class="bg-gray-50 py-20">
+    <section id="documentation" class="section-dark py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <h2 class="text-4xl font-bold text-gray-900 mb-4">Documentation</h2>
-                <p class="text-xl text-gray-600">Everything you need to get started</p>
+                <h2 class="text-4xl font-bold text-white mb-4">Documentation</h2>
+                <p class="text-xl text-gray-400">Everything you need to get started</p>
             </div>
 
             <div class="grid md:grid-cols-3 gap-8">
-                <a href="https://github.com/Krasnov777/DICOMFlow#quick-start" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Quick Start Guide</h3>
-                    <p class="text-gray-600">Get up and running in minutes</p>
+                <a href="https://github.com/Krasnov777/DICOMFlow#quick-start" class="feature-card p-6 rounded-lg hover:border-[#4a9eff] transition">
+                    <h3 class="text-xl font-bold text-white mb-2">Quick Start Guide</h3>
+                    <p class="text-gray-400">Get up and running in minutes</p>
                 </a>
-                <a href="https://github.com/Krasnov777/DICOMFlow/blob/main/PROJECT_STATUS.md" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Feature Status</h3>
-                    <p class="text-gray-600">See what's implemented and what's coming</p>
+                <a href="https://github.com/Krasnov777/DICOMFlow/blob/main/PROJECT_STATUS.md" class="feature-card p-6 rounded-lg hover:border-[#4a9eff] transition">
+                    <h3 class="text-xl font-bold text-white mb-2">Feature Status</h3>
+                    <p class="text-gray-400">See what's implemented and what's coming</p>
                 </a>
-                <a href="https://github.com/Krasnov777/DICOMFlow" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition">
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Developer Guide</h3>
-                    <p class="text-gray-600">Contribute to the project</p>
+                <a href="https://github.com/Krasnov777/DICOMFlow" class="feature-card p-6 rounded-lg hover:border-[#4a9eff] transition">
+                    <h3 class="text-xl font-bold text-white mb-2">Developer Guide</h3>
+                    <p class="text-gray-400">Contribute to the project</p>
                 </a>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-gray-300 py-12">
+    <footer class="bg-[#0d0d0d] text-gray-400 py-12 border-t border-[#3c3c3c]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="grid md:grid-cols-4 gap-8">
                 <div>
@@ -262,29 +287,29 @@
                 <div>
                     <h4 class="text-white font-semibold mb-4">Product</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="#features" class="hover:text-white transition">Features</a></li>
-                        <li><a href="#download" class="hover:text-white transition">Download</a></li>
-                        <li><a href="https://github.com/Krasnov777/DICOMFlow/releases" class="hover:text-white transition">Releases</a></li>
+                        <li><a href="#features" class="hover:text-[#4a9eff] transition">Features</a></li>
+                        <li><a href="#download" class="hover:text-[#4a9eff] transition">Download</a></li>
+                        <li><a href="https://github.com/Krasnov777/DICOMFlow/releases" class="hover:text-[#4a9eff] transition">Releases</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="text-white font-semibold mb-4">Documentation</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="https://github.com/Krasnov777/DICOMFlow#quick-start" class="hover:text-white transition">Quick Start</a></li>
-                        <li><a href="https://github.com/Krasnov777/DICOMFlow/blob/main/PROJECT_STATUS.md" class="hover:text-white transition">Project Status</a></li>
-                        <li><a href="https://github.com/Krasnov777/DICOMFlow/blob/main/DISTRIBUTION_GUIDE.md" class="hover:text-white transition">Distribution Guide</a></li>
+                        <li><a href="https://github.com/Krasnov777/DICOMFlow#quick-start" class="hover:text-[#4a9eff] transition">Quick Start</a></li>
+                        <li><a href="https://github.com/Krasnov777/DICOMFlow/blob/main/PROJECT_STATUS.md" class="hover:text-[#4a9eff] transition">Project Status</a></li>
+                        <li><a href="https://github.com/Krasnov777/DICOMFlow/blob/main/DISTRIBUTION_GUIDE.md" class="hover:text-[#4a9eff] transition">Distribution Guide</a></li>
                     </ul>
                 </div>
                 <div>
                     <h4 class="text-white font-semibold mb-4">Community</h4>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="https://github.com/Krasnov777/DICOMFlow" class="hover:text-white transition">GitHub</a></li>
-                        <li><a href="https://github.com/Krasnov777/DICOMFlow/issues" class="hover:text-white transition">Issues</a></li>
-                        <li><a href="https://github.com/Krasnov777/DICOMFlow/blob/main/LICENSE" class="hover:text-white transition">License (MIT)</a></li>
+                        <li><a href="https://github.com/Krasnov777/DICOMFlow" class="hover:text-[#4a9eff] transition">GitHub</a></li>
+                        <li><a href="https://github.com/Krasnov777/DICOMFlow/issues" class="hover:text-[#4a9eff] transition">Issues</a></li>
+                        <li><a href="https://github.com/Krasnov777/DICOMFlow/blob/main/LICENSE" class="hover:text-[#4a9eff] transition">License (MIT)</a></li>
                     </ul>
                 </div>
             </div>
-            <div class="border-t border-gray-800 mt-8 pt-8 text-sm text-center">
+            <div class="border-t border-[#3c3c3c] mt-8 pt-8 text-sm text-center">
                 <p>&copy; 2026 DICOMFlow. Open source under MIT License.</p>
                 <p class="mt-2">Built with ❤️ using Rust, Tauri, and Svelte</p>
             </div>

@@ -56,5 +56,14 @@ tmp/
 # Test data (anonymized outputs)
 test-data/samples/Anonymized_*/
 
+# Test data directory (internal use only - DICOM files)
+test-data/
+
+# Internal documentation and development notes
+.claude/
+*.draft.md
+*.notes.md
+
 # OS
 Thumbs.db
+.DS_Store
