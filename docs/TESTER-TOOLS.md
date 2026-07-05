@@ -52,7 +52,7 @@ TLS/timeout settings. A fast "what does this PACS support?" capability map.
 - **Verified live** against Orthanc: 114/120 accepted — all storage
   classes take all 8 syntaxes; Verification only the 2 uncompressed (correctly
   rejecting the 6 compressed).
-- Test: `SCPTests.testLiveNegotiationProbe` (gated by `/tmp/dicomflow-live`).
+- Test: `SCPTests.testLiveNegotiationProbe` (gated by `ORTHANC_HOST`).
 
 ### DICOMweb
 `DicomWebView` → `DicomWebClient` (pure `URLSession`, no DCMTK).
@@ -260,7 +260,7 @@ tests only.
 
 ---
 
-## Deferred / not testable against the author's test PACS
+## Not yet supported (and why)
 - **MPPS** (N-CREATE / N-SET) — `DcmSCU` supports it, but Orthanc provides no MPPS
   SCP to test against.
 - **Storage Commitment** (N-ACTION + async N-EVENT-REPORT) — `DcmSCU` has **no**
@@ -269,4 +269,4 @@ tests only.
 - **Live packet capture** (libpcap/BPF) — needs root; **not** allowed in the App
   Sandbox. The .pcap import + self-traffic inspector are the sandbox-safe alternatives.
 
-See `docs/BACKLOG.md` for the full backlog.
+

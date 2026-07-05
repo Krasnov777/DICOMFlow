@@ -86,7 +86,7 @@ native/      DCMTK + OpenJPEG build scripts (outputs git-ignored) · vendored
 Tests/       XCTest logic tests (offline; live tests gated by ORTHANC_HOST)
 project.yml  XcodeGen spec — the .xcodeproj is generated, never committed
 scripts/     verify.sh · build-mcp.sh · notarize.sh · tls-proxy.py
-docs/        ARCHITECTURE · TESTER-TOOLS · VIEWER · MCP · DECISIONS · PROGRESS · BACKLOG
+docs/        ARCHITECTURE · TESTER-TOOLS · VIEWER · MCP + the project website
 ```
 
 ## Docs
@@ -95,8 +95,6 @@ docs/        ARCHITECTURE · TESTER-TOOLS · VIEWER · MCP · DECISIONS · PROGR
 - [docs/TESTER-TOOLS.md](docs/TESTER-TOOLS.md) — every Tester tool, key files, headless hooks
 - [docs/VIEWER.md](docs/VIEWER.md) — viewer layouts, tools, keyboard shortcuts, data support
 - [docs/MCP.md](docs/MCP.md) — use DicomFlow as an AI-agent tool
-- [docs/DECISIONS.md](docs/DECISIONS.md) — engineering decision log
-- [docs/PROGRESS.md](docs/PROGRESS.md) / [docs/BACKLOG.md](docs/BACKLOG.md) — status & roadmap
 
 ## License
 

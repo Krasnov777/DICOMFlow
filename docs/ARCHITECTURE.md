@@ -153,4 +153,4 @@ pynetdicom) over loopback HTTP, with pixel volumes passed via an mmap'd temp fil
 It worked and produced an ad-hoc `.dmg`, but the App Sandbox forbids spawning a
 bundled interpreter subprocess, so it was replaced by the in-process DCMTK engine
 (N1–N6). The `sidecar/` directory remains for reference only and is not built or
-shipped. See `docs/DECISIONS.md`.
+shipped.
