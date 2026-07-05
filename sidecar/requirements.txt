@@ -1,0 +1,20 @@
+# DICOMBench sidecar dependencies
+# Core service
+fastapi
+uvicorn
+python-multipart
+
+# DICOM
+pydicom
+pynetdicom
+numpy
+
+# Pixel codecs (compressed transfer syntaxes): JPEG, JPEG-LS, JPEG2000, RLE.
+# pydicom auto-detects these handlers; GDCM is the fallback.
+pylibjpeg
+pylibjpeg-libjpeg
+pylibjpeg-openjpeg
+python-gdcm
+
+# Packaging — added in M7.
+# pyinstaller

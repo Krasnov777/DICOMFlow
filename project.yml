@@ -1,0 +1,136 @@
+name: DicomFlow
+
+options:
+  bundleIdPrefix: com.dicombench
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    MARKETING_VERSION: "2.0"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    ARCHS: arm64    # Apple Silicon only — DCMTKit.xcframework and vendored libs are arm64
+    DEAD_CODE_STRIPPING: YES
+
+targets:
+  DicomFlow:
+    type: application
+    platform: macOS
+    sources:
+      - path: App
+      - path: Sources
+      - path: native/fmjpeg2k
+        excludes: ["README.md", "LICENSE"]
+    dependencies:
+      - framework: native/DCMTKit.xcframework
+        embed: false
+    settings:
+      base:
+        PRODUCT_NAME: DicomFlow
+        PRODUCT_BUNDLE_IDENTIFIER: com.dicombench.app
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_FILE: App/Info.plist
+        CODE_SIGN_ENTITLEMENTS: App/DicomFlow.entitlements
+        COMBINE_HIDPI_IMAGES: YES
+        SWIFT_OBJC_BRIDGING_HEADER: App/DicomFlow-Bridging-Header.h
+        CLANG_CXX_LANGUAGE_STANDARD: "gnu++17"
+        CLANG_CXX_LIBRARY: "libc++"
+        HEADER_SEARCH_PATHS: "$(inherited) $(SRCROOT)/native/DCMTKit.xcframework/macos-arm64/Headers $(SRCROOT)/native/fmjpeg2k/include $(SRCROOT)/native/openjpeg-install/include/openjpeg-2.5 $(SRCROOT)/native/openssl/include"
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(SRCROOT)/native/openjpeg-install/lib "
+        OTHER_LDFLAGS: "$(inherited) -lz -lopenjp2 $(SRCROOT)/native/openssl/lib/libssl.a $(SRCROOT)/native/openssl/lib/libcrypto.a"
+      configs:
+        Debug:
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "-"
+          CODE_SIGNING_REQUIRED: NO
+          CODE_SIGNING_ALLOWED: NO
+        Release:
+          # Unsigned by default so anyone can build from source. Distribution
+          # signing/notarization is done by scripts/notarize.sh, which reads the
+          # team/identity from a gitignored signing.env (see scripts/README).
+          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_IDENTITY: "-"
+          CODE_SIGNING_REQUIRED: NO
+          CODE_SIGNING_ALLOWED: NO
+
+  # MCP server: exposes the native DICOM engine as agent tools (stdio JSON-RPC).
+  # A plain command-line tool that reuses DicomNative (the DCMTK bridge) — none of
+  # the SwiftUI/Metal layers — so it is not sandboxed and has free network/file
+  # access. Distributed separately (notarized / Homebrew), not via the App Store.
+  dicomflow-mcp:
+    type: tool
+    platform: macOS
+    sources:
+      - path: mcp
+      - path: Sources/DicomNative
+      - path: Sources/DicomEngine/DicomWebClient.swift   # pure Foundation (no SwiftUI)
+      - path: native/fmjpeg2k
+        excludes: ["README.md", "LICENSE"]
+    dependencies:
+      - framework: native/DCMTKit.xcframework
+        embed: false
+    settings:
+      base:
+        PRODUCT_NAME: dicomflow-mcp
+        PRODUCT_BUNDLE_IDENTIFIER: com.dicombench.mcp
+        SWIFT_OBJC_BRIDGING_HEADER: mcp/MCP-Bridging-Header.h
+        CLANG_CXX_LANGUAGE_STANDARD: "gnu++17"
+        CLANG_CXX_LIBRARY: "libc++"
+        HEADER_SEARCH_PATHS: "$(inherited) $(SRCROOT)/native/DCMTKit.xcframework/macos-arm64/Headers $(SRCROOT)/native/fmjpeg2k/include $(SRCROOT)/native/openjpeg-install/include/openjpeg-2.5 $(SRCROOT)/native/openssl/include"
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(SRCROOT)/native/openjpeg-install/lib "
+        OTHER_LDFLAGS: "$(inherited) -lz -lopenjp2 $(SRCROOT)/native/openssl/lib/libssl.a $(SRCROOT)/native/openssl/lib/libcrypto.a"
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_ALLOWED: NO
+
+  # Standalone logic tests (no TEST_HOST — the Debug app is unsigned).
+  # Compiles the pure-Swift sources under test directly, so internals are
+  # visible without @testable.
+  DicomFlowTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: Tests
+      - path: Sources/AppCore/PcapParser.swift
+      - path: Sources/AppCore/ProtocolLog.swift
+      - path: Sources/DicomEngine/HL7.swift
+      - path: Sources/DicomEngine/DicomWebClient.swift
+      - path: Sources/DicomEngine/FHIRClient.swift
+      - path: Sources/MetalRender/ArcballCamera.swift   # pure simd, no app deps
+      - path: Sources/DicomNative
+      - path: native/fmjpeg2k
+        excludes: ["README.md", "LICENSE"]
+    dependencies:
+      - framework: native/DCMTKit.xcframework
+        embed: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.dicombench.tests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_OBJC_BRIDGING_HEADER: App/DicomFlow-Bridging-Header.h
+        CLANG_CXX_LANGUAGE_STANDARD: "gnu++17"
+        CLANG_CXX_LIBRARY: "libc++"
+        HEADER_SEARCH_PATHS: "$(inherited) $(SRCROOT)/native/DCMTKit.xcframework/macos-arm64/Headers $(SRCROOT)/native/fmjpeg2k/include $(SRCROOT)/native/openjpeg-install/include/openjpeg-2.5 $(SRCROOT)/native/openssl/include"
+        LIBRARY_SEARCH_PATHS: "$(inherited) $(SRCROOT)/native/openjpeg-install/lib "
+        OTHER_LDFLAGS: "$(inherited) -lz -lopenjp2 $(SRCROOT)/native/openssl/lib/libssl.a $(SRCROOT)/native/openssl/lib/libcrypto.a"
+        # Unsigned like the Debug app — codesign chokes on FileProvider xattrs
+        # that iCloud adds to fresh dirs under ~/Documents.
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGNING_ALLOWED: NO
+
+schemes:
+  DicomFlow:
+    build:
+      targets:
+        DicomFlow: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - DicomFlowTests

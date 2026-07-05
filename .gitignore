@@ -1,0 +1,42 @@
+# Xcode / build
+build/
+build-rel/
+build-mcp/
+bin/
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# XcodeGen produces the project; regenerate with `xcodegen generate`.
+*.xcodeproj/
+
+# iCloud/Finder sync conflict copies
+* [0-9].*
+* [0-9]/
+
+# Python sidecar
+sidecar/.venv/
+sidecar/dist/
+sidecar/build/
+__pycache__/
+*.pyc
+
+# Native DCMTK build (rebuild via native/build-dcmtk.sh)
+native/build/
+native/DCMTKit.xcframework/
+native/build*.log
+
+# Packaging artifacts
+/dist/
+*.dmg
+*.app.zip
+
+# macOS
+.DS_Store
+
+# OpenJPEG build (rebuild via native/build-openjpeg.sh)
+native/openjpeg-install/
+
+# Maintainer signing credentials (never commit)
+scripts/signing.env
+signing.env

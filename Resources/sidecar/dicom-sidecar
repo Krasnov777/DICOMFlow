@@ -1,0 +1,8 @@
+#!/bin/bash
+# DEV launcher — stands in for the PyInstaller-built binary until M7 packaging.
+# It execs the sidecar from the project venv so the same bundle path
+# (Contents/Resources/sidecar/dicom-sidecar) works during development.
+set -e
+SIDECAR_DIR="/Users/krasnov/Documents/My_Projects/Dicom/DicomBench/sidecar"
+cd "$SIDECAR_DIR"
+exec "./.venv/bin/python" -m dicom_sidecar.main "$@"
