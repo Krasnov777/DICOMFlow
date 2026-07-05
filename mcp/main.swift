@@ -54,6 +54,22 @@ let tools: [[String: Any]] = [
      "description": "What is open in the DicomFlow app viewer right now. Returns the study the user is looking at — kind (series/file/sr/directory), patient, modality, series description/UID, and the local file paths — so you can feed them straight into dicom_render_slice, dicom_read_tags, etc. The app publishes this whenever a study is loaded; errors if the app hasn't opened anything yet.",
      "inputSchema": obj([:])],
 
+    ["name": "dicom_viewer_state",
+     "description": "Live state of the running DicomFlow app's viewer: layout, plane, slice index/count, window/level, zoom, loaded series (with UIDs) and file paths. Requires the app to be running; if it isn't, fall back to dicom_current_study.",
+     "inputSchema": obj([:])],
+
+    ["name": "dicom_viewer_open",
+     "description": "Open a study in the running DicomFlow app's viewer (brings the app to front). Give a `path` (single DICOM file) or `directory` (series folder; optional `seriesUID` picks a series). Note: the sandboxed app can read user-opened locations, its own container, and temp dirs — not arbitrary files.",
+     "inputSchema": obj(["path": strProp, "directory": strProp, "seriesUID": strProp])],
+
+    ["name": "dicom_viewer_goto",
+     "description": "Navigate the running DicomFlow app's viewer: `plane` (axial|coronal|sagittal), `sliceIndex` (0-based) or `sliceFraction` (0…1), `windowCenter`/`windowWidth`, `layout` (2D|MPR|3D|Compare), or switch series with `seriesUID`. Returns the resulting viewer state.",
+     "inputSchema": obj(["plane": ["type": "string", "enum": ["axial", "coronal", "sagittal"]],
+                         "sliceIndex": intProp, "sliceFraction": ["type": "number"],
+                         "windowCenter": ["type": "number"], "windowWidth": ["type": "number"],
+                         "layout": ["type": "string", "enum": ["2D", "MPR", "3D", "Compare"]],
+                         "seriesUID": strProp])],
+
     ["name": "dicom_read_tags",
      "description": "Read every DICOM data element of a file (tag, name, VR, value, keyword). Use to inspect a study's metadata.",
      "inputSchema": obj(["path": strProp], required: ["path"])],
@@ -161,6 +177,29 @@ func text(_ s: String, isError: Bool = false) -> (content: [[String: Any]], isEr
 
 func callTool(_ name: String, _ args: [String: Any]) -> (content: [[String: Any]], isError: Bool) {
     switch name {
+    case "dicom_viewer_state":
+        do { return text(jsonString(try ControlClient.call("viewer_state"))) }
+        catch { return text(error.localizedDescription, isError: true) }
+
+    case "dicom_viewer_open":
+        var p: [String: Any] = [:]
+        if let v = args["path"] as? String { p["path"] = v }
+        if let v = args["directory"] as? String { p["directory"] = v }
+        if let v = args["seriesUID"] as? String { p["seriesUID"] = v }
+        guard !p.isEmpty else { return text("give a path or directory", isError: true) }
+        do { return text(jsonString(try ControlClient.call("open_study", params: p))) }
+        catch { return text(error.localizedDescription, isError: true) }
+
+    case "dicom_viewer_goto":
+        var p: [String: Any] = [:]
+        for k in ["plane", "layout", "seriesUID"] { if let v = args[k] as? String { p[k] = v } }
+        if let v = args["sliceIndex"] as? Int { p["sliceIndex"] = v }
+        for k in ["sliceFraction", "windowCenter", "windowWidth"] {
+            if let v = args[k] as? NSNumber { p[k] = v.doubleValue }
+        }
+        do { return text(jsonString(try ControlClient.call("viewer_goto", params: p))) }
+        catch { return text(error.localizedDescription, isError: true) }
+
     case "dicom_current_study":
         guard let s = CurrentStudy.readLatest() else {
             return text("No study is published. Open a study in the DicomFlow app first — the viewer writes a manifest on every load.", isError: true)

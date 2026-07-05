@@ -44,3 +44,28 @@ final class CurrentStudyTests: XCTestCase {
         XCTAssertNil(CurrentStudy.read(from: URL(fileURLWithPath: "/nonexistent/x.json")))
     }
 }
+
+final class ControlEndpointTests: XCTestCase {
+    func testRoundTripAndPermissions() throws {
+        let url = URL(fileURLWithPath: NSTemporaryDirectory()
+            + "dicomflow-control/\(UUID().uuidString)/control.json")
+        let ep = ControlEndpoint(port: 54321, token: "secret-token")
+        ep.write(to: url)
+        let back = try XCTUnwrap(ControlEndpoint.read(from: url))
+        XCTAssertEqual(back.port, 54321)
+        XCTAssertEqual(back.token, "secret-token")
+        XCTAssertEqual(back.pid, ProcessInfo.processInfo.processIdentifier)
+        // The token is a local credential — file must be owner-only.
+        let perms = try XCTUnwrap(FileManager.default
+            .attributesOfItem(atPath: url.path)[.posixPermissions] as? Int)
+        XCTAssertEqual(perms, 0o600)
+    }
+
+    /// readLatest ignores endpoints whose process is gone (stale file after a crash).
+    func testStaleEndpointIgnored() throws {
+        let dir = NSTemporaryDirectory() + "dicomflow-control-stale/\(UUID().uuidString)"
+        let url = URL(fileURLWithPath: dir + "/Library/Application Support/DicomFlow/control.json")
+        ControlEndpoint(port: 1, token: "t", pid: 999_999_9).write(to: url)
+        XCTAssertNil(ControlEndpoint.readLatest(home: dir))
+    }
+}

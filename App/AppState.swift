@@ -42,10 +42,15 @@ final class AppState: ObservableObject {
 
     private let recentsKey = "recentStudies"
 
+    /// Loopback control channel for dicomflow-mcp (open studies, live viewer state).
+    private var controlServer: ControlServer?
+
     func boot() {
         // Capture DCMTK's protocol log for the Protocol inspector.
         ProtocolLog.shared.startCapture()
         loadRecents()
+        controlServer = ControlServer(state: self)
+        controlServer?.start()
     }
 
     /// Switch to the Viewer and load the given folder (optionally selecting one series).

@@ -53,6 +53,9 @@ claude mcp add dicomflow /absolute/path/to/DicomFlow/bin/dicomflow-mcp
 
 | Tool | Arguments | Returns |
 |---|---|---|
+| `dicom_viewer_state` | — | **live** state of the running app's viewer: layout, plane, slice index/count, window/level, zoom, loaded series + file paths (app must be running) |
+| `dicom_viewer_open` | `path` **or** `directory` (+ `seriesUID?`) | opens the study in the running app's viewer and brings it to front |
+| `dicom_viewer_goto` | `plane?`, `sliceIndex?`/`sliceFraction?`, `windowCenter?`/`windowWidth?`, `layout?`, `seriesUID?` | navigates the running app's viewer; returns the resulting state |
 | `dicom_current_study` | — | the study currently open in the DicomFlow app (kind, patient, modality, series UID/description, file paths + age) — the app publishes a manifest on every viewer load; feed its `files` into the other tools |
 | `dicom_read_tags` | `path` | every data element (tag, name, VR, value, keyword) + transfer syntax |
 | `dicom_validate` | `path` | Part-10 conformance: `ok`, `errors`, `warnings`, `info` |
@@ -92,7 +95,9 @@ Ask the agent, e.g.:
   L 400) and describe what you see."*
 - *"Read the SR at `…/SR000001.dcm` and summarize the radiation dose."*
 - *"What study is open in DicomFlow right now? Render its middle slice and
-  tell me what you see."* (uses `dicom_current_study`)
+  tell me what you see."* (uses `dicom_current_study` / `dicom_viewer_state`)
+- *"Open /scans/ct-head in DicomFlow, jump to the mid coronal slice with a
+  bone window."* (uses `dicom_viewer_open` + `dicom_viewer_goto`)
 
 ## Guardrails & roadmap
 

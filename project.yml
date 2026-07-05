@@ -67,6 +67,7 @@ targets:
       - path: Sources/DicomNative
       - path: Sources/DicomEngine/DicomWebClient.swift   # pure Foundation (no SwiftUI)
       - path: Sources/AppCore/CurrentStudy.swift         # app↔mcp "current study" manifest
+      - path: Sources/AppCore/ControlChannel.swift       # app↔mcp control-endpoint discovery
       - path: native/fmjpeg2k
         excludes: ["README.md", "LICENSE"]
     dependencies:
@@ -98,6 +99,7 @@ targets:
       - path: Sources/AppCore/PcapParser.swift
       - path: Sources/AppCore/ProtocolLog.swift
       - path: Sources/AppCore/CurrentStudy.swift
+      - path: Sources/AppCore/ControlChannel.swift
       - path: Sources/DicomEngine/HL7.swift
       - path: Sources/DicomEngine/DicomWebClient.swift
       - path: Sources/DicomEngine/FHIRClient.swift
