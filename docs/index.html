@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DicomFlow — native macOS DICOM toolbench &amp; viewer</title>
+<meta name="description" content="DicomFlow is a free, open-source macOS app for engineers: a full DICOM network tester (DIMSE, DICOMweb, FHIR, HL7) and a Metal-powered DICOM viewer, with DCMTK built in-process. MIT licensed.">
+<meta property="og:title" content="DicomFlow — native macOS DICOM toolbench &amp; viewer">
+<meta property="og:description" content="Test DICOM networking. View DICOM images. SwiftUI + Metal + in-process DCMTK. Free &amp; open source (MIT).">
+<meta property="og:image" content="https://krasnov777.github.io/DICOMFlow/assets/icon-512.png">
+<meta property="og:url" content="https://krasnov777.github.io/DICOMFlow/">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+<link rel="apple-touch-icon" href="assets/icon-256.png">
+<style>
+  :root {
+    --bg: #0b0d10;
+    --bg-soft: #12151a;
+    --card: #161a21;
+    --card-edge: #232a34;
+    --text: #e8ecf1;
+    --muted: #9aa5b1;
+    --accent: #7fb3ff;
+    --accent-2: #b9d4ff;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+    --radius: 14px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+  header { padding: 88px 0 56px; text-align: center;
+    background:
+      radial-gradient(1200px 500px at 50% -10%, #1a2230 0%, transparent 70%),
+      radial-gradient(700px 350px at 80% 10%, #16202e 0%, transparent 70%);
+  }
+  .app-icon { width: 148px; height: 148px; border-radius: 33px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 2px 0 rgba(255,255,255,.06) inset; }
+  h1 { font-size: clamp(2.4rem, 6vw, 3.6rem); font-weight: 800; letter-spacing: -0.02em; margin-top: 28px; }
+  h1 .flow { background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tagline { font-size: clamp(1.05rem, 2.5vw, 1.3rem); color: var(--muted); max-width: 620px; margin: 14px auto 0; }
+  .badges { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 22px; }
+  .badge { font-size: .8rem; font-weight: 600; color: var(--muted); border: 1px solid var(--card-edge);
+    border-radius: 999px; padding: 5px 13px; background: var(--bg-soft); }
+  .cta { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 34px; }
+  .btn { display: inline-flex; align-items: center; gap: 9px; border-radius: 12px; padding: 13px 24px;
+    font-weight: 700; font-size: 1rem; text-decoration: none; transition: transform .12s ease, box-shadow .12s ease; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: linear-gradient(180deg, #86b7ff, #5d9bf7); color: #0a1526;
+    box-shadow: 0 8px 24px rgba(93,155,247,.35); }
+  .btn-ghost { border: 1px solid var(--card-edge); color: var(--text); background: var(--bg-soft); }
+  .btn svg { width: 18px; height: 18px; fill: currentColor; }
+  .sub-note { margin-top: 14px; font-size: .85rem; color: var(--muted); }
+  .sub-note code { font-family: var(--mono); font-size: .8rem; }
+
+  section { padding: 64px 0; }
+  section.alt { background: var(--bg-soft); }
+  h2 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .lead { color: var(--muted); max-width: 720px; margin-bottom: 36px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; }
+  .card { background: var(--card); border: 1px solid var(--card-edge); border-radius: var(--radius); padding: 24px; }
+  .card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+  .card p { color: var(--muted); font-size: .93rem; }
+  .card .glyph { font-size: 1.25rem; }
+  .card ul { color: var(--muted); font-size: .93rem; padding-left: 18px; margin-top: 6px; }
+  .card li { margin: 3px 0; }
+
+  .stack-line { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .chip { font-family: var(--mono); font-size: .78rem; color: var(--accent-2);
+    background: #131b28; border: 1px solid #22314a; padding: 4px 11px; border-radius: 8px; }
+
+  pre { background: #0d1117; border: 1px solid var(--card-edge); border-radius: var(--radius);
+    padding: 20px 22px; overflow-x: auto; font-family: var(--mono); font-size: .84rem; line-height: 1.7;
+    color: #c9d4e0; }
+  pre .c { color: #6b7684; }
+  pre .k { color: var(--accent); }
+
+  footer { padding: 48px 0 64px; border-top: 1px solid var(--card-edge); color: var(--muted); font-size: .88rem; }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+  .disclaimer { margin-top: 14px; padding: 14px 18px; border: 1px solid #3a2f22; background: #1a1510;
+    border-radius: 10px; color: #cfa96b; font-size: .85rem; }
+
+  @media (max-width: 640px) {
+    header { padding: 56px 0 40px; }
+    .app-icon { width: 112px; height: 112px; border-radius: 25px; }
+    section { padding: 44px 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <img class="app-icon" src="assets/icon-256.png" srcset="assets/icon-512.png 2x" alt="DicomFlow app icon" width="148" height="148">
+    <h1>Dicom<span class="flow">Flow</span></h1>
+    <p class="tagline">Test DICOM networking. View DICOM images. A native macOS toolbench for PACS integration engineers — free and open source.</p>
+    <div class="badges">
+      <span class="badge">v2.0</span>
+      <span class="badge">macOS 26+ · Apple Silicon</span>
+      <span class="badge">SwiftUI + Metal</span>
+      <span class="badge">DCMTK in-process</span>
+      <span class="badge">MIT license</span>
+    </div>
+    <div class="cta">
+      <a class="btn btn-primary" href="https://github.com/Krasnov777/DICOMFlow/releases/latest">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.6l3.8-3.8 1.4 1.4-6.2 6.2-6.2-6.2 1.4-1.4 3.8 3.8V3h2zM4 19h16v2H4v-2z"/></svg>
+        Download DMG
+      </a>
+      <a class="btn btn-ghost" href="https://github.com/Krasnov777/DICOMFlow">
+        <svg viewBox="0 0 24 24"><path d="M12 .5C5.6.5.5 5.6.5 12c0 5.1 3.3 9.4 7.9 10.9.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.6-3.9-1.6-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.2.1 1.8 1.2 1.8 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.7 0-1.3.4-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.2 1.2a11 11 0 0 1 5.8 0C17.2 4.7 18.2 5 18.2 5c.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.4-2.7 5.4-5.3 5.7.4.4.8 1.1.8 2.2v3.2c0 .4.2.7.8.6a11.5 11.5 0 0 0 7.9-10.9C23.5 5.6 18.4.5 12 .5z"/></svg>
+        View on GitHub
+      </a>
+    </div>
+    <p class="sub-note">Signed &amp; notarized. Or build from source with <code>xcodegen + xcodebuild</code> — no certificates needed.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <h2>A full DICOM network tester</h2>
+    <p class="lead">Every protocol a PACS integration touches, in one sidebar — with a decoded traffic timeline underneath.</p>
+    <div class="grid">
+      <div class="card">
+        <h3><span class="glyph">🔌</span> DIMSE networking</h3>
+        <ul>
+          <li>C-ECHO, C-STORE, Query/Retrieve (C-FIND / C-MOVE / C-GET)</li>
+          <li>Modality Worklist (MWL C-FIND)</li>
+          <li>Built-in Test SCP — a mini-PACS that receives studies</li>
+          <li>Negotiation Probe: see exactly which presentation contexts a peer accepts</li>
+          <li>DICOM TLS (BCP 195) on every outgoing connection</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">🌐</span> Web &amp; messaging</h3>
+        <ul>
+          <li>DICOMweb: QIDO-RS, WADO-RS, STOW-RS</li>
+          <li>FHIR ImagingStudy queries</li>
+          <li>HL7 v2 over MLLP — send messages and run a listener</li>
+          <li>Keychain-stored credentials, per-server</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">🔍</span> Protocol Inspector</h3>
+        <ul>
+          <li>Live decoded DICOM-traffic timeline for every operation</li>
+          <li>Imports .pcap / .pcapng captures and dissects the PDUs</li>
+          <li>Association, context, and DIMSE message breakdown</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">🏷️</span> Files &amp; tags</h3>
+        <ul>
+          <li>Tag Inspector, Editor, and two-file Compare (tag diff)</li>
+          <li>Anonymizer — PS3.15 Basic Confidentiality Profile</li>
+          <li>Redact Pixels: burned-in text detection via Vision OCR</li>
+          <li>Conformance Validator with full IOD module checks</li>
+          <li>DICOMDIR reader, dataset dump, synthetic study generator</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2>A GPU-powered viewer</h2>
+    <p class="lead">Not a diagnostic workstation — a fast, keyboard-driven way to actually look at the data you're moving around.</p>
+    <div class="grid">
+      <div class="card">
+        <h3><span class="glyph">🩻</span> 2D &amp; MPR</h3>
+        <ul>
+          <li>Axial / coronal / sagittal slices, right-drag window/level</li>
+          <li>Orthanc-style 2×2 MPR with a linked crosshair</li>
+          <li>HU probe, cine, invert, rotate/flip, multi-frame stacks</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">🧊</span> 3D volume rendering</h3>
+        <ul>
+          <li>Five Metal reconstruction modes: MIP, MinIP, X-Ray/DRR, Volume, Iso-Surface</li>
+          <li>Arcball or turntable rotation, clip planes, view presets</li>
+          <li>Transfer-function gallery, movie export (sweep &amp; turntable)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">📐</span> Measurements &amp; SR</h3>
+        <ul>
+          <li>Persistent distance, angle, and ROI tools with HU histogram</li>
+          <li>Structured Reports rendered as readable text</li>
+          <li>PNG export of any view</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3><span class="glyph">🤖</span> MCP server for AI agents</h3>
+        <p><code style="font-family:var(--mono);font-size:.85em">dicomflow-mcp</code> exposes the same native engine to AI agents over the Model Context Protocol — echo a PACS, query studies, retrieve, inspect tags, render slices — straight from Claude or any MCP client.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Fully native. Nothing to install around it.</h2>
+    <p class="lead">One sandboxed process: SwiftUI for the UI, Metal for rendering, and DCMTK statically linked in-process through an Obj-C++ bridge. No Python, no subprocesses, no runtime dependencies.</p>
+    <div class="stack-line">
+      <span class="chip">SwiftUI</span>
+      <span class="chip">Metal</span>
+      <span class="chip">DCMTK 3.6.9</span>
+      <span class="chip">OpenJPEG 2.5 (JPEG 2000)</span>
+      <span class="chip">OpenSSL 3.6 (TLS)</span>
+      <span class="chip">Vision OCR</span>
+      <span class="chip">XcodeGen</span>
+      <span class="chip">App Sandbox</span>
+    </div>
+    <h2 style="margin-top:48px">Build from source</h2>
+    <p class="lead">The repo builds unsigned out of the box — no Apple certificates required.</p>
+<pre><span class="c"># one-time: build the native codecs (~3 min)</span>
+bash native/build-dcmtk.sh
+bash native/build-openjpeg.sh
+
+<span class="c"># generate the Xcode project and build</span>
+<span class="k">xcodegen</span> generate
+<span class="k">xcodebuild</span> -project DicomFlow.xcodeproj -scheme DicomFlow \
+  -configuration Debug -derivedDataPath build build
+
+open build/Build/Products/Debug/DicomFlow.app</pre>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p><strong>DicomFlow</strong> · <a href="https://github.com/Krasnov777/DICOMFlow/blob/main/LICENSE">MIT license</a> ·
+      <a href="https://github.com/Krasnov777/DICOMFlow">Source on GitHub</a> ·
+      <a href="https://github.com/Krasnov777/DICOMFlow/blob/main/THIRD-PARTY-NOTICES.md">Third-party notices</a>
+      (DCMTK · OpenJPEG · fmjpeg2koj · OpenSSL)</p>
+    <p style="margin-top:8px">© 2026 Viacheslav Krasnov</p>
+    <p class="disclaimer">DicomFlow is a testing and visualization tool for engineers. It is <strong>not a medical device</strong> and must not be used for diagnosis or treatment.</p>
+  </div>
+</footer>
+
+</body>
+</html>
