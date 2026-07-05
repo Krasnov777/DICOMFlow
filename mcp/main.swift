@@ -50,6 +50,10 @@ let strProp: [String: Any] = ["type": "string"]
 let intProp: [String: Any] = ["type": "integer"]
 
 let tools: [[String: Any]] = [
+    ["name": "dicom_current_study",
+     "description": "What is open in the DicomFlow app viewer right now. Returns the study the user is looking at — kind (series/file/sr/directory), patient, modality, series description/UID, and the local file paths — so you can feed them straight into dicom_render_slice, dicom_read_tags, etc. The app publishes this whenever a study is loaded; errors if the app hasn't opened anything yet.",
+     "inputSchema": obj([:])],
+
     ["name": "dicom_read_tags",
      "description": "Read every DICOM data element of a file (tag, name, VR, value, keyword). Use to inspect a study's metadata.",
      "inputSchema": obj(["path": strProp], required: ["path"])],
@@ -157,6 +161,25 @@ func text(_ s: String, isError: Bool = false) -> (content: [[String: Any]], isEr
 
 func callTool(_ name: String, _ args: [String: Any]) -> (content: [[String: Any]], isError: Bool) {
     switch name {
+    case "dicom_current_study":
+        guard let s = CurrentStudy.readLatest() else {
+            return text("No study is published. Open a study in the DicomFlow app first — the viewer writes a manifest on every load.", isError: true)
+        }
+        var out: [String: Any] = [
+            "kind": s.kind,
+            "updatedAt": ISO8601DateFormatter().string(from: s.updatedAt),
+            "ageSeconds": Int(Date().timeIntervalSince(s.updatedAt)),
+            "files": s.files,
+            "fileCount": s.files.count,
+        ]
+        if let v = s.directory { out["directory"] = v }
+        if let v = s.seriesUID { out["seriesUID"] = v }
+        if let v = s.seriesDescription { out["seriesDescription"] = v }
+        if let v = s.modality { out["modality"] = v }
+        if let v = s.patient { out["patient"] = v }
+        if let v = s.studyDescription { out["studyDescription"] = v }
+        return text(jsonString(out))
+
     case "dicom_read_tags":
         let path = str(args, "path")
         do {

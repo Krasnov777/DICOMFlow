@@ -301,6 +301,7 @@ final class ViewerState: ObservableObject {
                 await loadSeries(pick, client: client)
             } else {
                 // No groupable series — decode the directory directly.
+                CurrentStudy(kind: "directory", directory: directory).write()
                 await decode(files: nil, directory: directory, client: client)
             }
             self.isLoading = false
@@ -320,11 +321,14 @@ final class ViewerState: ObservableObject {
             if let text = try? await client.readReport(path: path) {
                 if Task.isCancelled { return }
                 volume = nil; srText = text
+                CurrentStudy(kind: "sr", files: [path]).write()
             } else if let color = await client.decodeColorImage(path: path) {
                 if Task.isCancelled { return }
                 volume = nil; colorImage = color; colorFrame = 0
                 layout = .slice2D               // color has no MPR/3D
+                CurrentStudy(kind: "file", files: [path]).write()
             } else {
+                CurrentStudy(kind: "file", files: [path]).write()
                 await decode(files: [path], directory: nil, client: client)
             }
             isLoading = false
@@ -342,6 +346,11 @@ final class ViewerState: ObservableObject {
         selectedSeriesID = info.id
         currentFiles = info.files
         errorText = nil
+        CurrentStudy(kind: info.modality == "SR" ? "sr" : "series",
+                     directory: (info.files.first as NSString?)?.deletingLastPathComponent,
+                     files: info.files, seriesUID: info.id,
+                     seriesDescription: info.description, modality: info.modality,
+                     patient: info.patient, studyDescription: info.studyDescription).write()
         // Structured Reports have no pixel data → show their text instead.
         if info.modality == "SR", let first = info.files.first {
             isLoading = true
