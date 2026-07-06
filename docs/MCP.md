@@ -7,8 +7,8 @@ PACS, inspect files, and **render slices to images it can actually look at**.
 
 It's a standalone command-line binary that reuses the same DCMTK bridge as the
 app (`Sources/DicomNative`) with none of the SwiftUI/Metal layers — so it is
-**not sandboxed** and has free network + file access. It is distributed
-separately from the App Store build.
+**not sandboxed** and has free network + file access. It also talks to the
+running app (see *App integration* below).
 
 ## Build
 
@@ -18,10 +18,10 @@ separately from the App Store build.
 
 This builds Release, stages the binary at `bin/dicomflow-mcp`, and prints the
 client config. Requirements: the DCMTK xcframework + OpenJPEG must already be
-built (they are, if the app builds), and **Homebrew `openssl@3`** must be present
-(`brew install openssl@3`) — it's the only non-system runtime dependency (DCMTK
-and OpenJPEG are statically linked). The DICOM data dictionary is built into the
-binary; no external dict file is needed.
+built (they are, if the app builds). Everything is statically linked — DCMTK,
+OpenJPEG, and OpenSSL (vendored in `native/openssl/`) — so the binary has no
+runtime dependencies. The DICOM data dictionary is built in; no external dict
+file is needed.
 
 ## Connect
 
@@ -106,8 +106,26 @@ Ask the agent, e.g.:
   `--allow-write` — without it they don't appear, and a direct call is refused.
 - Logs go to **stderr**; stdout is a clean JSON-RPC stream.
 - **Distribution:** for sharing beyond your own Mac, the binary should be
-  Developer-ID-signed + notarized and the `openssl@3` dylibs statically linked or
-  bundled with a fixed rpath (currently they resolve from Homebrew). Tracked as a
-  follow-up.
-- **Next:** oblique (coronal/sagittal) reslice in `render_slice`; per-tool audit
-  logging; optional live "control the open app" channel.
+  Developer-ID-signed + notarized (everything is statically linked, so it is a
+  single self-contained file).
+- **Next:** per-tool audit logging.
+
+## App integration
+
+Two channels connect the MCP server to the app (both under the app's
+`Application Support/DicomFlow/`):
+
+1. **`current-study.json`** — the viewer overwrites this manifest on every load
+   (kind, patient, modality, series UID, file paths). `dicom_current_study`
+   reads it; works even when the app is closed.
+2. **`control.json` + a loopback TCP channel** — at launch the app starts a
+   listener on `127.0.0.1` (random port, per-launch token, one JSON request per
+   connection) and publishes `{port, token, pid}` to this owner-only file.
+   `dicom_viewer_state` / `dicom_viewer_open` / `dicom_viewer_goto` proxy over
+   it; stale endpoints from crashed apps are detected via the pid. The channel
+   is never reachable from the network, and requests without the token are
+   refused.
+
+The sandboxed app can only read user-opened locations, its own container, and
+temp dirs — so `dicom_viewer_open` works for anything the user opened before or
+the app received/retrieved, not arbitrary new paths.

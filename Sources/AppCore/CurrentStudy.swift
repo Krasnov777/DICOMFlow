@@ -67,11 +67,10 @@ public struct CurrentStudy: Codable, Equatable {
     }()
 
     /// Atomic write; best-effort — publishing must never break a viewer load.
+    /// Owner-only permissions: the manifest can carry a patient name.
     public func write(to url: URL = CurrentStudy.writeURL) {
         do {
-            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                    withIntermediateDirectories: true)
-            try CurrentStudy.encoder.encode(self).write(to: url, options: .atomic)
+            try secureAtomicWrite(CurrentStudy.encoder.encode(self), to: url)
         } catch {
             // Non-fatal: external tools just won't see a manifest.
         }
@@ -82,11 +81,12 @@ public struct CurrentStudy: Codable, Equatable {
         return try? decoder.decode(CurrentStudy.self, from: data)
     }
 
-    /// First readable manifest among the candidates.
+    /// Newest readable manifest among the candidates — a sandboxed Release app
+    /// and an unsandboxed Debug build write to different locations, and the
+    /// most recently updated one is the study the user actually has open.
     public static func readLatest(home: String = NSHomeDirectory()) -> CurrentStudy? {
-        for url in readCandidates(home: home) {
-            if let s = read(from: url) { return s }
-        }
-        return nil
+        readCandidates(home: home)
+            .compactMap { read(from: $0) }
+            .max { $0.updatedAt < $1.updatedAt }
     }
 }

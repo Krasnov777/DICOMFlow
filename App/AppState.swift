@@ -44,8 +44,13 @@ final class AppState: ObservableObject {
 
     /// Loopback control channel for dicomflow-mcp (open studies, live viewer state).
     private var controlServer: ControlServer?
+    private var booted = false
 
     func boot() {
+        // The root view's .task calls this per window — boot exactly once, or
+        // every ⌘N would leak a listener and re-run the capture hooks.
+        guard !booted else { return }
+        booted = true
         // Capture DCMTK's protocol log for the Protocol inspector.
         ProtocolLog.shared.startCapture()
         loadRecents()

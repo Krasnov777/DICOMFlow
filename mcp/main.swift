@@ -13,6 +13,10 @@ import Foundation
 
 // MARK: - I/O
 
+// A peer-closed socket (app control channel) or closed stdout must surface as
+// an error, not kill the process with SIGPIPE.
+signal(SIGPIPE, SIG_IGN)
+
 let allowWrite = CommandLine.arguments.contains("--allow-write")
 
 func logErr(_ s: String) {

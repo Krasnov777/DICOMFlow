@@ -21,21 +21,37 @@ final class ControlServer {
         listener = l
     }
 
+    deinit { listener.cancel() }
+
     func start() {
         listener.stateUpdateHandler = { [weak self] st in
-            guard let self, case .ready = st, let port = self.listener.port?.rawValue else { return }
-            ControlEndpoint(port: port, token: self.token).write()
+            guard let self else { return }
+            switch st {
+            case .ready:
+                if let port = self.listener.port?.rawValue {
+                    ControlEndpoint(port: port, token: self.token).write()
+                }
+            case .failed, .cancelled:
+                // Don't advertise a dead port — clients would report a running
+                // app that never answers.
+                ControlEndpoint.removeIfMine()
+            default:
+                break
+            }
         }
         listener.newConnectionHandler = { [weak self] conn in
             guard let self else { conn.cancel(); return }
             conn.start(queue: self.queue)
+            // One-shot request/reply protocol: anything still open after 10 s
+            // is idle or stalling — drop it so slow openers can't pile up fds.
+            self.queue.asyncAfter(deadline: .now() + 10) { conn.cancel() }
             self.receive(conn, buffer: Data())
         }
         listener.start(queue: queue)
         // Best-effort cleanup so a stale endpoint doesn't linger after quit.
         NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification,
                                                object: nil, queue: nil) { _ in
-            ControlEndpoint.remove()
+            ControlEndpoint.removeIfMine()
         }
     }
 
@@ -108,14 +124,27 @@ final class ControlServer {
             guard v.volume != nil || v.colorImage != nil || v.srText != nil else {
                 return ["ok": false, "error": "nothing is loaded in the viewer"]
             }
+            // Validate EVERYTHING before touching state — an error reply must
+            // be a no-op, or agents retry against a half-applied viewer.
+            var axis: MPRAxis?
             if let p = params["plane"] as? String {
-                guard let axis = MPRAxis(rawValue: p) else { return ["ok": false, "error": "plane must be axial|coronal|sagittal"] }
-                v.plane2D = axis
+                guard let a = MPRAxis(rawValue: p) else { return ["ok": false, "error": "plane must be axial|coronal|sagittal"] }
+                axis = a
             }
+            var layout: ViewerLayout?
             if let l = params["layout"] as? String {
-                guard let layout = ViewerLayout(rawValue: l) else { return ["ok": false, "error": "layout must be 2D|MPR|3D|Compare"] }
-                v.layout = layout
+                guard let lo = ViewerLayout(rawValue: l) else { return ["ok": false, "error": "layout must be 2D|MPR|3D|Compare"] }
+                layout = lo
             }
+            var series: DicomEngine.SeriesInfo?
+            if let uid = params["seriesUID"] as? String {
+                guard let info = v.series.first(where: { $0.id == uid }) else {
+                    return ["ok": false, "error": "seriesUID not in the loaded study's series list"]
+                }
+                series = info
+            }
+            if let a = axis { v.plane2D = a }
+            if let lo = layout { v.layout = lo }
             if let idx = params["sliceIndex"] as? Int {
                 let n = max(v.slice2DCount, 1)
                 v.slice2D = n > 1 ? Float(min(max(idx, 0), n - 1)) / Float(n - 1) : 0.5
@@ -124,13 +153,7 @@ final class ControlServer {
             }
             if let wc = params["windowCenter"] as? Double { v.winCenter = Float(wc) }
             if let ww = params["windowWidth"] as? Double { v.winWidth = max(1, Float(ww)) }
-            if let uid = params["seriesUID"] as? String {
-                if let info = v.series.first(where: { $0.id == uid }) {
-                    v.selectSeries(info, client: state.engine)
-                } else {
-                    return ["ok": false, "error": "seriesUID not in the loaded study's series list"]
-                }
-            }
+            if let info = series { v.selectSeries(info, client: state.engine) }
             return viewerStateSnapshot()
 
         default:

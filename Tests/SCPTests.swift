@@ -120,7 +120,7 @@ final class SCPTests: XCTestCase {
     /// and C-MOVE-to-self (Orthanc → our SCP, inbound).
     func testLiveOrthancRoundTrip() throws {
         guard let host = liveHost else {
-            throw XCTSkip("live test — set ORTHANC_HOST (and optionally ORTHANC_PORT/ORTHANC_AE) to enable")
+            throw XCTSkip("live test — set TEST_RUNNER_ORTHANC_HOST (xcodebuild) / ORTHANC_HOST (direct) to enable")
         }
         let oPort = livePort, orthancAE = liveAE
         let ourAE = "DICOMBENCH", ourPort: Int32 = 11112
@@ -173,7 +173,7 @@ final class SCPTests: XCTestCase {
     /// Live negotiation probe against Orthanc (gated by ORTHANC_HOST).
     func testLiveNegotiationProbe() throws {
         guard let host = liveHost else {
-            throw XCTSkip("live test — set ORTHANC_HOST (and optionally ORTHANC_PORT/ORTHANC_AE) to enable")
+            throw XCTSkip("live test — set TEST_RUNNER_ORTHANC_HOST (xcodebuild) / ORTHANC_HOST (direct) to enable")
         }
         let probe = DCMTKNet.probeContextsHost(host, port: livePort,
                                                calledAE: liveAE, callingAE: "DICOMBENCH")

@@ -301,8 +301,8 @@ final class ViewerState: ObservableObject {
                 await loadSeries(pick, client: client)
             } else {
                 // No groupable series — decode the directory directly.
-                CurrentStudy(kind: "directory", directory: directory).write()
-                await decode(files: nil, directory: directory, client: client)
+                await decode(files: nil, directory: directory, client: client,
+                             manifest: CurrentStudy(kind: "directory", directory: directory))
             }
             self.isLoading = false
         }
@@ -328,8 +328,8 @@ final class ViewerState: ObservableObject {
                 layout = .slice2D               // color has no MPR/3D
                 CurrentStudy(kind: "file", files: [path]).write()
             } else {
-                CurrentStudy(kind: "file", files: [path]).write()
-                await decode(files: [path], directory: nil, client: client)
+                await decode(files: [path], directory: nil, client: client,
+                             manifest: CurrentStudy(kind: "file", files: [path]))
             }
             isLoading = false
         }
@@ -346,25 +346,32 @@ final class ViewerState: ObservableObject {
         selectedSeriesID = info.id
         currentFiles = info.files
         errorText = nil
-        CurrentStudy(kind: info.modality == "SR" ? "sr" : "series",
-                     directory: (info.files.first as NSString?)?.deletingLastPathComponent,
-                     files: info.files, seriesUID: info.id,
-                     seriesDescription: info.description, modality: info.modality,
-                     patient: info.patient, studyDescription: info.studyDescription).write()
+        let manifest = CurrentStudy(kind: info.modality == "SR" ? "sr" : "series",
+                                    directory: (info.files.first as NSString?)?.deletingLastPathComponent,
+                                    files: info.files, seriesUID: info.id,
+                                    seriesDescription: info.description, modality: info.modality,
+                                    patient: info.patient, studyDescription: info.studyDescription)
         // Structured Reports have no pixel data → show their text instead.
         if info.modality == "SR", let first = info.files.first {
             isLoading = true
-            do { srText = try await client.readReport(path: first); volume = nil }
+            do {
+                srText = try await client.readReport(path: first); volume = nil
+                if !Task.isCancelled { manifest.write() }
+            }
             catch { errorText = error.localizedDescription; srText = nil }
             isLoading = false
             return
         }
         isLoading = true
-        await decode(files: info.files, directory: nil, client: client)
+        await decode(files: info.files, directory: nil, client: client, manifest: manifest)
         isLoading = false
     }
 
-    private func decode(files: [String]?, directory: String?, client: DicomEngine) async {
+    /// Decode and show a volume. `manifest` is published only after the decode
+    /// SUCCEEDS and this load hasn't been superseded — the manifest must always
+    /// describe what is actually on screen, never a failed or stale load.
+    private func decode(files: [String]?, directory: String?, client: DicomEngine,
+                        manifest: CurrentStudy? = nil) async {
         do {
             var shownPreview = false
             // Progressive load: a coarse preview (every Nth slice) shows fast, then
@@ -383,6 +390,7 @@ final class ViewerState: ObservableObject {
             if let files { vol = try await client.decodeVolume(files: files) }
             else { vol = try await client.decodeVolume(directory: directory ?? "") }
             apply(vol, resetView: !shownPreview)
+            if !Task.isCancelled { manifest?.write() }
             isRefining = false
         } catch {
             self.errorText = error.localizedDescription

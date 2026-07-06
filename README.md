@@ -70,9 +70,10 @@ Builds are **unsigned by default** so anyone can compile without certificates
 (the App Sandbox stays on). Maintainers produce signed + notarized DMGs with
 `scripts/notarize.sh`. OpenSSL static libs are vendored in `native/openssl/`.
 
-Live-PACS tests are opt-in: `ORTHANC_HOST=<host> xcodebuild … test` (with
-optional `ORTHANC_PORT` / `ORTHANC_AE`) runs round-trip tests against a real
-Orthanc; unset, the suite is fully offline.
+Live-PACS tests are opt-in: `TEST_RUNNER_ORTHANC_HOST=<host> xcodebuild … test`
+(xcodebuild forwards env vars to the test runner only with the `TEST_RUNNER_`
+prefix; optional `TEST_RUNNER_ORTHANC_PORT` / `TEST_RUNNER_ORTHANC_AE`) runs
+round-trip tests against a real Orthanc; unset, the suite is fully offline.
 
 ## Layout
 
@@ -86,7 +87,7 @@ native/      DCMTK + OpenJPEG build scripts (outputs git-ignored) · vendored
 Tests/       XCTest logic tests (offline; live tests gated by ORTHANC_HOST)
 project.yml  XcodeGen spec — the .xcodeproj is generated, never committed
 scripts/     verify.sh · build-mcp.sh · notarize.sh · tls-proxy.py
-docs/        ARCHITECTURE · TESTER-TOOLS · VIEWER · MCP + the project website
+docs/        ARCHITECTURE · TESTER-TOOLS · VIEWER · MCP · DECISIONS · PROGRESS · BACKLOG
 ```
 
 ## Docs
@@ -95,6 +96,8 @@ docs/        ARCHITECTURE · TESTER-TOOLS · VIEWER · MCP + the project website
 - [docs/TESTER-TOOLS.md](docs/TESTER-TOOLS.md) — every Tester tool, key files, headless hooks
 - [docs/VIEWER.md](docs/VIEWER.md) — viewer layouts, tools, keyboard shortcuts, data support
 - [docs/MCP.md](docs/MCP.md) — use DicomFlow as an AI-agent tool
+- [docs/DECISIONS.md](docs/DECISIONS.md) — engineering decision log
+- [docs/PROGRESS.md](docs/PROGRESS.md) / [docs/BACKLOG.md](docs/BACKLOG.md) — status & roadmap
 
 ## License
 

@@ -46,12 +46,11 @@ public struct ControlEndpoint: Codable, Equatable {
     }()
 
     /// Atomic write, owner-read-only (the token is a local credential).
+    /// Written 0600-from-birth: temp file in the same dir, chmod, then rename —
+    /// no window where another user could read the token.
     public func write(to url: URL = ControlEndpoint.writeURL) {
         do {
-            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
-                                                    withIntermediateDirectories: true)
-            try ControlEndpoint.encoder.encode(self).write(to: url, options: .atomic)
-            try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
+            try secureAtomicWrite(ControlEndpoint.encoder.encode(self), to: url)
         } catch {
             // Non-fatal: external tools just can't reach the control channel.
         }
@@ -62,15 +61,57 @@ public struct ControlEndpoint: Codable, Equatable {
         return try? decoder.decode(ControlEndpoint.self, from: data)
     }
 
-    /// First endpoint among the candidates whose process is still alive.
-    public static func readLatest(home: String = NSHomeDirectory()) -> ControlEndpoint? {
-        for url in readCandidates(home: home) {
-            if let e = read(from: url), kill(e.pid, 0) == 0 { return e }
-        }
-        return nil
+    /// Endpoints whose process is still alive, newest first. Callers should try
+    /// each in order — a pid can be reused by an unrelated process, so liveness
+    /// here is a hint and only a successful connect is proof.
+    public static func aliveEndpoints(home: String = NSHomeDirectory()) -> [ControlEndpoint] {
+        readCandidates(home: home)
+            .compactMap { read(from: $0) }
+            .filter { kill($0.pid, 0) == 0 }
+            .sorted { $0.startedAt > $1.startedAt }
     }
 
-    public static func remove(at url: URL = ControlEndpoint.writeURL) {
+    /// Newest live endpoint (see `aliveEndpoints`).
+    public static func readLatest(home: String = NSHomeDirectory()) -> ControlEndpoint? {
+        aliveEndpoints(home: home).first
+    }
+
+    /// Remove the published endpoint — but only if it is OURS. Two instances
+    /// (e.g. Debug + Release) share the discovery path; the first to quit must
+    /// not delete the survivor's live endpoint.
+    public static func removeIfMine(at url: URL = ControlEndpoint.writeURL) {
+        guard let e = read(from: url),
+              e.pid == ProcessInfo.processInfo.processIdentifier else { return }
         try? FileManager.default.removeItem(at: url)
+    }
+}
+
+/// Write `data` to `url` atomically with 0600 permissions from the first byte:
+/// create a temp file in the destination directory with a restrictive mode,
+/// write, then rename over the target.
+func secureAtomicWrite(_ data: Data, to url: URL) throws {
+    let dir = url.deletingLastPathComponent()
+    try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    let tmp = dir.appendingPathComponent(".\(url.lastPathComponent).\(UUID().uuidString)")
+    guard FileManager.default.createFile(atPath: tmp.path, contents: nil,
+                                         attributes: [.posixPermissions: 0o600]) else {
+        throw CocoaError(.fileWriteUnknown)
+    }
+    do {
+        let h = try FileHandle(forWritingTo: tmp)
+        try h.write(contentsOf: data)
+        try h.close()
+        // usingNewMetadataOnly: keep the temp file's 0600 — the default
+        // preserves the REPLACED file's permissions (e.g. a pre-existing 644).
+        // replaceItemAt requires an existing destination; first write = move.
+        if FileManager.default.fileExists(atPath: url.path) {
+            _ = try FileManager.default.replaceItemAt(url, withItemAt: tmp,
+                                                      options: .usingNewMetadataOnly)
+        } else {
+            try FileManager.default.moveItem(at: tmp, to: url)
+        }
+    } catch {
+        try? FileManager.default.removeItem(at: tmp)
+        throw error
     }
 }
