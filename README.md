@@ -67,8 +67,9 @@ bash scripts/verify.sh            # or --fast for unit tests only
 ```
 
 Builds are **unsigned by default** so anyone can compile without certificates
-(the App Sandbox stays on). Maintainers produce signed + notarized DMGs with
-`scripts/notarize.sh`. OpenSSL static libs are vendored in `native/openssl/`.
+(the App Sandbox stays on). Maintainers produce release DMGs with
+`scripts/notarize.sh`, which signs, notarizes, and staples both the app and the
+DMG container itself. OpenSSL static libs are vendored in `native/openssl/`.
 
 Live-PACS tests are opt-in: `TEST_RUNNER_ORTHANC_HOST=<host> xcodebuild … test`
 (xcodebuild forwards env vars to the test runner only with the `TEST_RUNNER_`

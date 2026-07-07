@@ -55,7 +55,7 @@ DicomFlow/
 │                        + fmjpeg2k/ — vendored JPEG 2000 codec sources (committed)
 ├── Tests/               XCTest logic tests (PcapParser, HL7, DicomWebClient) —
 │                        standalone bundle, run via scripts/verify.sh or xcodebuild test
-├── scripts/             notarize.sh — Developer-ID sign + notarize + DMG (maintainers)
+├── scripts/             notarize.sh — Developer-ID sign + notarize + staple, app and DMG (maintainers)
 │                        + verify.sh — one-command build + tests + headless hooks
 ├── sidecar/             LEGACY Python sidecar (v1) — unused at runtime; retains
 │                        tools/make_fixture.py for generating synthetic test data
@@ -143,8 +143,9 @@ bundle (`Tests/`, 22 logic tests) + the app build + all hooks in one command
 - **XcodeGen** (`project.yml` → generated `.xcodeproj`, not committed).
 - **Apple Silicon only** (arm64), **macOS 26+** (Liquid Glass UI; the native libs
   are built with a 14.0 floor but the app target requires 26).
-- Distribution: signed+notarized DMG via `scripts/notarize.sh`; unsigned local
-  builds work out of the box (App Sandbox stays on).
+- Distribution: `scripts/notarize.sh` signs, notarizes, and staples the app and
+  then the DMG container itself; unsigned local builds work out of the box
+  (App Sandbox stays on).
 
 ## History — the v1 Python sidecar
 

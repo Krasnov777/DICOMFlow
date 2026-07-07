@@ -35,6 +35,13 @@ echo "==> Build (Release, unsigned)"
 xcodebuild -project DicomFlow.xcodeproj -scheme DicomFlow \
     -configuration Release -derivedDataPath "$DD" build
 
+echo "==> Stage outside iCloud (codesign rejects FileProvider xattrs under ~/Documents)"
+WORK="$(mktemp -d /tmp/dicomflow-notarize-XXXX)"
+trap 'rm -rf "$WORK"' EXIT
+ditto --norsrc --noextattr --noacl "$APP" "$WORK/DicomFlow.app"
+APP="$WORK/DicomFlow.app"
+xattr -cr "$APP"
+
 echo "==> Sign (Developer ID, hardened runtime)"
 codesign --force --deep --options runtime --timestamp \
     --entitlements App/DicomFlow.entitlements \
@@ -53,10 +60,23 @@ xcrun stapler staple "$APP"
 
 echo "==> Package DMG"
 rm -f "$DMG"
-STAGE="$(mktemp -d)"
+STAGE="$WORK/dmg"
+mkdir "$STAGE"
 cp -R "$APP" "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
 hdiutil create -volname "DicomFlow" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
-rm -rf "$STAGE"
 
-echo "✅ $DMG — signed, notarized, stapled."
+echo "==> Sign DMG"
+codesign --force --timestamp --sign "$SIGN_IDENTITY" "$DMG"
+
+echo "==> Notarize DMG"
+xcrun notarytool submit "$DMG" --apple-id "$APPLE_ID" --team-id "$TEAM_ID" \
+    --password "$APP_PW" --wait
+
+echo "==> Staple DMG"
+xcrun stapler staple "$DMG"
+
+echo "==> Verify"
+spctl -a -t open --context context:primary-signature -v "$DMG"
+
+echo "✅ $DMG — app and DMG signed, notarized, stapled."
