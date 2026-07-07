@@ -7,6 +7,16 @@ and poking at datasets. **Not a medical product**: no diagnosis, no clinical use
 Fully native — SwiftUI + Metal, with **DCMTK statically linked in-process** via an
 Obj-C++ bridge. No Python, no subprocesses, no runtime dependencies.
 
+## Install
+
+Requires **macOS 26+** (Apple Silicon). Grab the signed & notarized DMG from the
+[latest release](https://github.com/Krasnov777/DICOMFlow/releases/latest), or use
+Homebrew:
+
+```bash
+brew install --cask krasnov777/tap/dicomflow
+```
+
 ## Two modes
 
 ### Tester / Toolbench
